@@ -1,0 +1,3 @@
+[submodule "vue-admin-template"]
+	path = vue-admin-template
+	url = https://github.com/PanJiaChen/vue-admin-template.git

@@ -1,6 +1,6 @@
 from typing import Optional
-from sqlmodel import SQLModel, Session, select, delete
-from .database import DATABASE_ENGINE
+from . import database
+from sqlmodel import SQLModel, Session, Field, select, delete
 import uuid
 
 class SSRModel(SQLModel, table=True):
@@ -13,26 +13,26 @@ class SSRModel(SQLModel, table=True):
     status: bool = False
 
 def create_ssr(model: SSRModel) -> SSRModel:
-    with Session(DATABASE_ENGINE) as session:
+    with Session() as session:
         session.add(model)
         session.commit()
         session.refresh(model)
         return model
 
 def get_ssr(uid: str) -> SSRModel:
-    with Session(DATABASE_ENGINE) as session:
+    with Session(database.DATABASE_ENGINE) as session:
         statement = select(SSRModel).where(SSRModel.uid == uid)
         results = session.exec(statement)
         return results.first()
 
 def delete_ssr(uid: str) -> SSRModel:
-    with Session(DATABASE_ENGINE) as session:
+    with Session(database.DATABASE_ENGINE) as session:
         statement = delete(SSRModel).where(SSRModel.uid == uid)
         results = session.exec(statement)
         return results.first()
 
 def list_ssr() -> list[SSRModel]:
-    with Session(DATABASE_ENGINE) as session:
+    with Session(database.DATABASE_ENGINE) as session:
         statement = select(SSRModel)
         results = session.exec(statement)
         return results.all()

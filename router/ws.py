@@ -20,7 +20,33 @@ class WebSocketManager:
             
 manager = WebSocketManager()
 
-@router.websocket("/{ssr_id}")
+@router.websocket("/server/{ssr_id}")
+async def websocket_endpoint(websocket: WebSocket, ssr_id: str):
+    await manager.connect(websocket)
+    websocket.app
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"You wrote: {data}", websocket)
+            # await manager.broadcast(f"Client #{client_id} says: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        # await manager.broadcast(f"Client #{client_id} left the chat")
+        
+@router.websocket("/client/{ssr_id}")
+async def websocket_endpoint(websocket: WebSocket, ssr_id: str):
+    await manager.connect(websocket)
+    websocket.app
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"You wrote: {data}", websocket)
+            # await manager.broadcast(f"Client #{client_id} says: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        # await manager.broadcast(f"Client #{client_id} left the chat")
+        
+@router.websocket("/message/{ssr_id}")
 async def websocket_endpoint(websocket: WebSocket, ssr_id: str):
     await manager.connect(websocket)
     websocket.app

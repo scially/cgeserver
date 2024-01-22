@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from router import ssr_router
+from router import ssr
 from config import PORT
 
 app = FastAPI()
-app.include_router(ssr_router)
+app.include_router(ssr.router)
 
 if __name__ == '__main__':
     import uvicorn

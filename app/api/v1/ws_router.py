@@ -18,43 +18,31 @@ class WebSocketManager:
             await connection.send_text(message)
             
             
-manager = WebSocketManager()
+client_manager: dict[str, WebSocketManager] = {}
+server_manager: dict[str, WebSocketManager] = {}
 
 @router.websocket("/server/{ssr_id}")
-async def websocket_endpoint(websocket: WebSocket, ssr_id: str):
+async def server_websocket_endpoint(websocket: WebSocket, ssr_id: str):
+    if server_manager.get(ssr_id) is None:
+        server_manager[ssr_id] = WebSocketManager()
+    manager = server_manager[ssr_id]
     await manager.connect(websocket)
-    websocket.app
     try:
         while True:
             data = await websocket.receive_text()
             await websocket.send_text(f"You wrote: {data}", websocket)
-            # await manager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        # await manager.broadcast(f"Client #{client_id} left the chat")
         
 @router.websocket("/client/{ssr_id}")
-async def websocket_endpoint(websocket: WebSocket, ssr_id: str):
+async def client_websocket_endpoint(websocket: WebSocket, ssr_id: str):
+     if client_manager.get(ssr_id) is None:
+        client_manager[ssr_id] = WebSocketManager()
+    manager = client_manager[ssr_id]
     await manager.connect(websocket)
-    websocket.app
     try:
         while True:
             data = await websocket.receive_text()
             await websocket.send_text(f"You wrote: {data}", websocket)
-            # await manager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        # await manager.broadcast(f"Client #{client_id} left the chat")
-        
-@router.websocket("/message/{ssr_id}")
-async def websocket_endpoint(websocket: WebSocket, ssr_id: str):
-    await manager.connect(websocket)
-    websocket.app
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"You wrote: {data}", websocket)
-            # await manager.broadcast(f"Client #{client_id} says: {data}")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        # await manager.broadcast(f"Client #{client_id} left the chat")

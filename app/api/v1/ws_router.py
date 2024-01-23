@@ -36,7 +36,7 @@ async def server_websocket_endpoint(websocket: WebSocket, ssr_id: str):
         
 @router.websocket("/client/{ssr_id}")
 async def client_websocket_endpoint(websocket: WebSocket, ssr_id: str):
-     if client_manager.get(ssr_id) is None:
+    if client_manager.get(ssr_id) is None:
         client_manager[ssr_id] = WebSocketManager()
     manager = client_manager[ssr_id]
     await manager.connect(websocket)

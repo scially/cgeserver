@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "cgeserver.db"
     DATABASE_URL: str  = f"sqlite:///{DATABASE_NAME}"
 
-    PRODUCTION: bool = False
+    PRODUCTION: bool = True
 
 
 settings = Settings()

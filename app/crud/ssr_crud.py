@@ -3,7 +3,7 @@ from typing import Optional
 from app.model import SSRModel
 from sqlmodel import Session
 from sqlmodel import select
-from app.db.engine import SessionDep
+from app.db.engine import engine
 
 class SSRCRUD(CRUDBase[SSRModel]):
     def __init__(self):
@@ -15,7 +15,7 @@ class SSRCRUD(CRUDBase[SSRModel]):
         return results.all()
 
 class SSRModelCache:
-    def __init__(self, session: Session = SessionDep):
+    def __init__(self, session: Session):
         self._ssr_crud = SSRCRUD()
         self._session = session
         self._cache: dict[str, SSRModel] = dict()
@@ -43,4 +43,4 @@ class SSRModelCache:
     def values(self)-> list[SSRModel]:
         return self._cache.values()
 
-Caches = SSRModelCache()
+Caches = SSRModelCache(Session(engine))

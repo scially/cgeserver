@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from app.database import ssr
-from .response import ResponseModel
+from app.db import ssr
+from ..api.response import ResponseModel
 
 router = APIRouter(prefix="/api/ssr")
 

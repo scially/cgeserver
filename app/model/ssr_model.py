@@ -1,10 +1,11 @@
-from typing import Optional, Dict, List
+from typing import Optional
 import uuid
 import subprocess
 import logging
 from pathlib import Path
 from sqlmodel import SQLModel, Field
 from pydantic.fields import PrivateAttr
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class SSRModel(SQLModel, table=True):
                     "-NoTextureStreaming", 
                     "-binnedmalloc3", 
                     "-AllowPixelStreamingCommands", 
-                    f"-PixelStreamingURL=ws://127.0.0.1:{PORT}/client/{self.uid}", 
-                    f"-ws=ws://127.0.0.1:{PORT}/message/{self.uid}"]
+                    f"-PixelStreamingURL=ws://127.0.0.1:{settings.PROJECT_PORT}/client/{self.uid}", 
+                    f"-ws=ws://127.0.0.1:{settings.PROJECT_PORT}/message/{self.uid}"]
             if self.background:
                 cmds = cmds + ["-RenderOffScreen", "-ForceRes"]
             

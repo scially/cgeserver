@@ -3,7 +3,7 @@ from typing import Optional
 from app.model import SSRModel
 from sqlmodel import Session
 from sqlmodel import select
-from app.db.engine import engine
+from app.engine import engine
 
 class SSRCRUD(CRUDBase[SSRModel]):
     def __init__(self):

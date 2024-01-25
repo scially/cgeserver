@@ -4,7 +4,12 @@ from sqlmodel import Session
 from sqlmodel import select
 
 from app.db import engine
+from app.db import create_table
 from app.models import SSRModel
+
+from uuid import UUID
+
+create_table()
 
 ModelType = TypeVar("ModelType", bound=SQLModel)
 
@@ -21,7 +26,7 @@ class SQLModelPlus(Generic[ModelType]):
 
     def get(self, uid: str) -> Optional[ModelType]:
         with Session(engine) as session:
-            obj = session.get(self._model, uid)
+            obj = session.get(self._model, UUID(uid))
             return obj
         
     def create(self, obj: ModelType) -> ModelType:
@@ -40,7 +45,7 @@ class SQLModelPlus(Generic[ModelType]):
 
     def delete(self, uid: str) -> ModelType:
         with Session(engine) as session:
-            obj = session.get(self._model, uid)
+            obj = session.get(self._model, UUID(uid))
             session.delete(obj)
             session.commit()
             return obj
@@ -59,12 +64,12 @@ class SSRCRUD(SQLModelPlus[SSRModel]):
 class SSRModelCache:
     def __init__(self):
         self._ssr_crud = SSRCRUD()
-        self._cache: dict[str, SSRModel] = dict()
+        self._cache: dict[UUID, SSRModel] = dict()
         for v in self._ssr_crud.list():
             self._cache[v.uid] = v
             
     def get(self, uid: str) -> Optional[SSRModel]:
-        hit_value = self._cache.get(uid)
+        hit_value = self._cache.get(UUID(uid))
         return hit_value
     
     def delete(self, uid: str) -> None:

@@ -8,6 +8,5 @@ app = FastAPI(title="CGEServer")
 app.include_router(router)
 
 if __name__ == '__main__':
-    create_table()
     import uvicorn
     uvicorn.run(app, port=settings.PROJECT_PORT)

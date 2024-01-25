@@ -1,46 +1,87 @@
-from typing import Generic, Optional, Type, TypeVar, Union
-from pydantic import BaseModel
-
-from sqlalchemy.orm import Session
-from sqlalchemy import select
+from typing import Generic, Optional, Type, TypeVar
+from sqlmodel import SQLModel
+from sqlmodel import Session
+from sqlmodel import select
 
 from app.db import engine
-from app.db import create_table
+from app.models import SSRModel
 
-create_table()
+ModelType = TypeVar("ModelType", bound=SQLModel)
 
-ModelType = TypeVar("ModelType", bound=BaseModel)
-
-class CRUDBase(Generic[ModelType]):
+class SQLModelPlus(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         """
         CRUD object with default methods to Create, Read, Update, Delete (CRUD).
 
         **Parameters**
 
-        * `model`: A SQLAlchemy model class
+        * `model`: A SQLModel model class
         """
         self._model = model
 
     def get(self, uid: str) -> Optional[ModelType]:
         with Session(engine) as session:
-            stmt = select(self._model).where(self._model.uid == uid)
-            return session.execute(stmt).first()
+            obj = session.get(self._model, uid)
+            return obj
         
     def create(self, obj: ModelType) -> ModelType:
-        db.add(obj)
-        db.commit()
-        db.refresh(obj)
-        return obj
+        with Session(engine) as session:
+            session.add(obj)
+            session.commit()
+            session.refresh(obj)
+            return obj
 
     def update(self, obj: ModelType) -> ModelType:
-        db.add(obj)
-        db.commit()
-        db.refresh(obj)
-        return obj
+        with Session(engine) as session:
+            session.add(obj)
+            session.commit()
+            session.refresh(obj)
+            return obj
 
     def delete(self, uid: str) -> ModelType:
-        obj = db.query(self._model).filter(self._model.uid == uid).first()
-        db.delete(obj)
-        db.commit()
-        return obj
+        with Session(engine) as session:
+            obj = session.get(self._model, uid)
+            session.delete(obj)
+            session.commit()
+            return obj
+
+
+class SSRCRUD(SQLModelPlus[SSRModel]):
+    def __init__(self):
+        super().__init__(SSRModel)
+
+    def list(self) -> list[SSRModel]:
+        with Session(engine) as session:
+            statement = select(SSRModel)
+            results = session.exec(statement=statement)
+            return results.all()
+
+class SSRModelCache:
+    def __init__(self):
+        self._ssr_crud = SSRCRUD()
+        self._cache: dict[str, SSRModel] = dict()
+        for v in self._ssr_crud.list():
+            self._cache[v.uid] = v
+            
+    def get(self, uid: str) -> Optional[SSRModel]:
+        hit_value = self._cache.get(uid)
+        return hit_value
+    
+    def delete(self, uid: str) -> None:
+        hit_value = self._cache.get(uid)
+        self._ssr_crud.delete(uid)
+        del self._cache[uid]
+    
+    def add(self, model: SSRModel) -> SSRModel:
+        model = self._ssr_crud.create(model)
+        self._cache[model.uid] = model
+        return model
+    
+    def update(self, model: SSRModel) -> None:
+        self._cache[model.uid] = model
+        self._ssr_crud.update(model)
+
+    def values(self)-> list[SSRModel]:
+        return self._cache.values()
+
+Caches = SSRModelCache(Session(engine))

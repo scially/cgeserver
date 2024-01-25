@@ -1,22 +1,15 @@
 from typing import Optional
 
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlmodel import Field
+from sqlmodel import SQLModel
 
 import uuid 
 
-class Base(DeclarativeBase):
-    pass
-
-class SSR(Base):
-    _tablename__ = "ssr"
-    
-    id: Mapped[int] = mapped_column(primary_key=True)
-    uid: Mapped[str] = mapped_column(unique=True, index=True, default_factory=uuid.uuid4)
-    name: Mapped[str]
-    background: Mapped[bool] = mapped_column(default=True)
-    uepath: Mapped[str] = mapped_column(default="")
-    frontpath: Mapped[str] = mapped_column(default="")
-    xresolution: Mapped[int] = mapped_column(default=1920)
-    yresolution: Mapped[int] = mapped_column(default=1080)
+class SSRModel(SQLModel, table=True):
+    uid: Optional[int] = Field(primary_key=True, default_factory=uuid.uuid4)
+    name: str
+    background: bool = Field(default=True)
+    uepath: Optional[str] = Field(default="")
+    frontpath: Optional[str] = Field(default="")
+    xresolution: int = Field(default=1920)
+    yresolution: int = Field(default=1080)

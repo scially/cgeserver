@@ -84,4 +84,4 @@ class SSRModelCache:
     def values(self)-> list[SSRModel]:
         return self._cache.values()
 
-Caches = SSRModelCache(Session(engine))
+Caches = SSRModelCache()

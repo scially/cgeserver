@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from app.crud.ssr_crud import Caches
-from app.api.response import ResponseModel
-from app.model import SSRModel
+from app.crud import Caches
+from app.response import ResponseModel
+from app.models import SSRModel
 
 router = APIRouter()
 

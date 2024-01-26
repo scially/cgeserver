@@ -6,7 +6,7 @@ from sqlmodel import select
 from app.db import engine
 from app.db import create_table
 from app.models import SSRModel
-
+from app.models import SSRModelInstance
 from uuid import UUID
 
 create_table()
@@ -64,29 +64,34 @@ class SSRCRUD(SQLModelPlus[SSRModel]):
 class SSRModelCache:
     def __init__(self):
         self._ssr_crud = SSRCRUD()
-        self._cache: dict[UUID, SSRModel] = dict()
-        for v in self._ssr_crud.list():
-            self._cache[v.uid] = v
+        self._cache: dict[UUID, SSRModelInstance] = dict()
             
-    def get(self, uid: str) -> Optional[SSRModel]:
+    def get(self, uid: str) -> Optional[SSRModelInstance]:
         hit_value = self._cache.get(UUID(uid))
-        return hit_value
+        if hit_value == None:
+            hit_value = self._ssr_crud.get(uid)
+            if hit_value == None:
+                return None
+            else:
+                self._cache[uid] = SSRModelInstance(hit_value)
+        return self._cache[uid]
     
     def delete(self, uid: str) -> None:
         hit_value = self._cache.get(uid)
-        self._ssr_crud.delete(uid)
-        del self._cache[uid]
+        if hit_value:
+            self._ssr_crud.delete(uid)
+            del self._cache[uid]
     
-    def add(self, model: SSRModel) -> SSRModel:
+    def add(self, model: SSRModel) -> SSRModelInstance:
         model = self._ssr_crud.create(model)
-        self._cache[model.uid] = model
-        return model
+        self._cache[model.uid] = SSRModelInstance(model)
+        return self._cache[model.uid]
     
     def update(self, model: SSRModel) -> None:
-        self._cache[model.uid] = model
-        self._ssr_crud.update(model)
+        model = self._ssr_crud.update(model)
+        self._cache[model.uid] = SSRModelInstance(model)
 
     def values(self)-> list[SSRModel]:
-        return self._cache.values()
+        return self._ssr_crud.list()
 
 Caches = SSRModelCache()

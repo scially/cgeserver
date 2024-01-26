@@ -1,3 +1,6 @@
+from enum import Enum
+from enum import unique
+
 from fastapi import APIRouter
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
@@ -71,31 +74,23 @@ async def stop(uid: str) -> ResponseModel[str]:
         r.msg = "ssr has stoped"
         r.status = 200
         return r
-    
-@router.websocket("/streamingserver/{uid}")
-async def server_websocket_endpoint(websocket: WebSocket, uid: str):
-    manager = server_manager[uid]
-    if manager is None:
-        server_manager[uid] = WebSocketManager()
-    manager = server_manager[uid]
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"You wrote: {data}", websocket)
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
 
-@router.websocket("/streamingclient/{uid}")
-async def client_websocket_endpoint(websocket: WebSocket, uid: str):
-    manager = client_manager[uid]
-    if manager is None:
-        client_manager[uid] = WebSocketManager()
-    manager = client_manager[uid]
+@unique
+class StreamingServerOrigin(str, Enum):
+    client = 'client'
+    server = 'server'
+        
+@router.websocket("/streaming/{origin}/{uid}")
+async def server_websocket_endpoint(websocket: WebSocket, origin: StreamingServerOrigin,uid: str):
+    ssr_instance = Caches.get(uid)
+    if ssr_instance == None or ssr_instance.status == False:
+        return
+    
+    manager = ssr_instance.server_manager[uid] if origin == StreamingServerOrigin.server else ssr_instance.client_manager
+    
     await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"You wrote: {data}", websocket)
+            await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)

@@ -4,8 +4,14 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from app.ws import WebSocketManager
+from app.config import settings
 
-import uuid 
+from pathlib import Path
+import logging
+import uuid
+from subprocess import Popen
+
+logger = logging.Logger(__name__)
 
 class SSRModel(SQLModel, table=True):
     uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)
@@ -22,7 +28,9 @@ class SSRModelInstance:
         self._status: bool = False
         self._client_manager: WebSocketManager = WebSocketManager()
         self._server_manager: WebSocketManager = WebSocketManager()
-    
+
+        self._process: Popen = None
+        
     @property
     def model(self) -> SSRModel:
         return self._model
@@ -45,7 +53,27 @@ class SSRModelInstance:
         return self
     
     def run(self) -> bool:
-        pass
-    
+        if self.model.uepath != '' and Path(self.model.uepath).exists() and not self.status:
+            cmds = [self.model.uepath,
+                    "-AudioMixer", 
+                    "-NoTextureStreaming", 
+                    "-binnedmalloc3", 
+                    "-AllowPixelStreamingCommands", 
+                    f"-PixelStreamingURL=ws://127.0.0.1:{settings.PORT}/client/{self.model.uid}", 
+                    f"-ws=ws://127.0.0.1:{settings.PORT}/message/{self.model.uid}"]
+            
+            if self.model.background:
+                cmds = cmds + ["-RenderOffScreen", "-ForceRes"]
+            
+            cmds = cmds + [f"-ResX={self.model.xresolution}", f"-Resy={self.model.xresolution}"]
+            cmds = cmds + ["-NvEncH264ConfigLevel=NV_ENC_LEVEL_H264_52"]
+            self._process = Popen(cmds)
+            
+            logger.info("[Render] Render Start: %s", ' '.join(cmds))
+            return True
+        
+        return False
+
     def stop(self) -> None:
-        pass
+        if self._process != None:
+            self._process.kill()

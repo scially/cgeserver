@@ -54,16 +54,21 @@ async def run(uid: str) -> ResponseModel[str]:
         return r
 
 @router.post("/ssr/stop/{uid}", response_model=ResponseModel[str])
-async def run(uid: str) -> ResponseModel[str]:
-    ssr_model = Caches.get(uid)
+async def stop(uid: str) -> ResponseModel[str]:
+    ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
-    if ssr_model is None:
+    if ssr_instance is None:
         r.msg = "ssr not found"
         r.status = 400
         return r
     
-    if ssr_model.status is True:
-        r.msg = 'ssr is running'
+    if ssr_instance.status == True:
+        ssr_instance.stop()
+        r.msg = 'ssr stop successed'
+        r.status = 200
+        return r
+    else:
+        r.msg = "ssr has stoped"
         r.status = 200
         return r
     

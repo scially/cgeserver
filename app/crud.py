@@ -73,23 +73,23 @@ class SSRModelCache:
             if hit_value == None:
                 return None
             else:
-                self._cache[uid] = SSRModelInstance(hit_value)
-        return self._cache[uid]
+                self._cache[UUID(uid)] = SSRModelInstance(hit_value)
+        return self._cache[UUID(uid)]
     
     def delete(self, uid: str) -> None:
-        hit_value = self._cache.get(uid)
+        hit_value = self._cache.get(UUID(uid))
         if hit_value:
             self._ssr_crud.delete(uid)
-            del self._cache[uid]
+            del self._cache[UUID(uid)]
     
     def add(self, model: SSRModel) -> SSRModelInstance:
         model = self._ssr_crud.create(model)
         self._cache[model.uid] = SSRModelInstance(model)
-        return self._cache[model.uid]
+        return self._cache[UUID(model.uid)]
     
     def update(self, model: SSRModel) -> None:
         model = self._ssr_crud.update(model)
-        self._cache[model.uid] = SSRModelInstance(model)
+        self._cache[UUID(model.uid)] = SSRModelInstance(model)
 
     def values(self)-> list[SSRModel]:
         return self._ssr_crud.list()

@@ -1,9 +1,12 @@
 from enum import Enum
 from enum import unique
 
+from fastapi import FastAPI
 from fastapi import APIRouter
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
+from fastapi import Depends
+from fastapi import Request
 
 from app.ws import WebSocketManager
 from app.crud import Caches
@@ -19,7 +22,7 @@ async def add(ssr_model: SSRModel) -> ResponseModel[SSRModel]:
     r.status = 200
     r.msg = "create ssr success"
     return r
-    
+
 @router.get("/ssr/list", response_model=ResponseModel[list[SSRModel]])
 async def list() -> ResponseModel[list[SSRModel]]:
     r: ResponseModel[SSRModel] = ResponseModel()
@@ -38,7 +41,7 @@ async def get(uid: str) -> ResponseModel[SSRModel]:
     return r
 
 @router.post("/ssr/run/{uid}", response_model=ResponseModel[str])
-async def run(uid: str) -> ResponseModel[str]:
+async def run(uid: str, req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:
@@ -51,13 +54,13 @@ async def run(uid: str) -> ResponseModel[str]:
         r.status = 200
         return r
     else:
-        ssr_instance.run()
+        ssr_instance.run(req.app)
         r.msg = "ssr start succeess"
         r.status = 200
         return r
 
 @router.post("/ssr/stop/{uid}", response_model=ResponseModel[str])
-async def stop(uid: str) -> ResponseModel[str]:
+async def stop(uid: str, req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:
@@ -66,7 +69,7 @@ async def stop(uid: str) -> ResponseModel[str]:
         return r
     
     if ssr_instance.status == True:
-        ssr_instance.stop()
+        ssr_instance.stop(req.app)
         r.msg = 'ssr stop successed'
         r.status = 200
         return r

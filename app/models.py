@@ -3,6 +3,10 @@ from typing import Optional
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from starlette.routing import Mount
+
 from app.ws import WebSocketManager
 from app.config import settings
 
@@ -52,7 +56,7 @@ class SSRModelInstance:
         self._status = sta
         return self
     
-    def run(self) -> bool:
+    def run(self, app: FastAPI) -> bool:
         if self.model.uepath != '' and Path(self.model.uepath).exists() and not self.status:
             cmds = [self.model.uepath,
                     "-AudioMixer", 
@@ -70,10 +74,20 @@ class SSRModelInstance:
             self._process = Popen(cmds)
             
             logger.info("[Render] Render Start: %s", ' '.join(cmds))
+            
             return True
         
-        return False
+        app.mount(f"/static/{self.model.uid}", StaticFiles(directory=self.model.frontpath), str(self.model.uid))
+        
+        return True
 
-    def stop(self) -> None:
+
+    def stop(self, app:FastAPI) -> None:
+        # umount self static mount
+        for index, route in enumerate(app.routes):
+            if isinstance(route, Mount) and route.name == str(self.model.uid):
+                del app.routes[index]
+                break
+            
         if self._process != None:
             self._process.kill()

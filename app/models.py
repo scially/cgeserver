@@ -17,6 +17,12 @@ from subprocess import Popen
 
 logger = logging.Logger(__name__)
 
+class UserModel(SQLModel, table=True):
+    uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)
+    name: str = Field('')
+    account: str
+    password: str
+    
 class SSRModel(SQLModel, table=True):
     uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)
     name: str

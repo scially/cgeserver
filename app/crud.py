@@ -6,6 +6,7 @@ from sqlmodel import select
 from app.db import engine
 from app.db import create_table
 from app.models import SSRModel
+from app.models import UserModel
 from app.models import SSRModelInstance
 from uuid import UUID
 
@@ -95,3 +96,18 @@ class SSRModelCache:
         return self._ssr_crud.list()
 
 Caches = SSRModelCache()
+
+class UserCRUD(SQLModelPlus[UserModel]):
+    def __init__(self):
+        super().__init__(UserModel)
+        
+    def get_by_name(self, account:str) -> Optional[UserModel]:
+        with Session(engine) as session:
+            statement = select(UserModel).where(UserModel.account == account)
+            result = session.exec(statement=statement).first()
+            return result
+                                                                     
+# add admin user (admin/cgeserver@2024)
+if UserCRUD().get_by_name("admin") == None:
+    AdminUser = UserModel(account='admin', name="管理员", password="cgeserver@2024")
+    UserCRUD().create(AdminUser)

@@ -1,7 +1,10 @@
 from typing import Optional
+import enum
+from datetime import datetime
 
 from sqlmodel import Field
 from sqlmodel import SQLModel
+from sqlmodel import Enum
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -16,12 +19,20 @@ import uuid
 from subprocess import Popen
 
 logger = logging.Logger(__name__)
-
-class UserModel(SQLModel, table=True):
+        
+class UserModel(SQLModel, table=True): 
+    @enum.unique
+    class UserRole(enum.IntEnum):
+        admin = 0
+        user = 1
+        guest = 2
+    
     uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)
     name: str = Field('')
-    account: str
+    account: str = Field(unique=True)
     password: str
+    role: UserRole = UserRole.user
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
     
 class SSRModel(SQLModel, table=True):
     uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)

@@ -1,17 +1,16 @@
 from enum import Enum
 from enum import unique
 
-from fastapi import FastAPI
 from fastapi import APIRouter
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
-from fastapi import Depends
 from fastapi import Request
 
-from app.ws import WebSocketManager
 from app.crud import Caches
+from app.crud import UserCRUD
 from app.response import ResponseModel
 from app.models import SSRModel
+from app.models import UserModel
 
 router = APIRouter()
 
@@ -97,3 +96,23 @@ async def server_websocket_endpoint(websocket: WebSocket, origin: StreamingServe
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        
+@router.post('/user/validate')
+def user_validate(account: str, password: str) -> ResponseModel[UserModel]:
+    r: ResponseModel[bool] = ResponseModel()
+    user = UserCRUD().get_by_name(account)
+    if user is None:
+        r.data = None
+        r.msg = "user not found"
+        r.status = 400
+    
+    if user.password == password:
+        r.data = user
+        r.status = 200
+        r.msg = "user validate success"
+    else:
+        r.data = None
+        r.status = 400
+        r.msg = "user validate failed"
+    
+    return r

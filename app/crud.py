@@ -101,12 +101,12 @@ class UserCRUD(SQLModelPlus[UserModel]):
     def __init__(self):
         super().__init__(UserModel)
         
-    def get_by_name(self, account:str) -> Optional[UserModel]:
+    def get_by_name(self, account: str) -> Optional[UserModel]:
         with Session(engine) as session:
             statement = select(UserModel).where(UserModel.account == account)
             result = session.exec(statement=statement).first()
             return result
-                                                                     
+                 
 # add admin user (admin/cgeserver@2024)
 if UserCRUD().get_by_name("admin") == None:
     AdminUser = UserModel(account='admin', name="管理员", password="cgeserver@2024")

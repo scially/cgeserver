@@ -3,7 +3,7 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">登  录</h3>
       </div>
 
       <el-form-item prop="username">
@@ -45,7 +45,7 @@
 
       <div class="tips">
         <span style="margin-right:20px;">username: admin</span>
-        <span> password: any</span>
+        <span> password: cgeserver@2024</span>
       </div>
 
     </el-form>
@@ -66,8 +66,8 @@ export default {
       }
     }
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+      if (value.length < 8) {
+        callback(new Error('The password can not be less than 8 digits'))
       } else {
         callback()
       }
@@ -75,7 +75,7 @@ export default {
     return {
       loginForm: {
         username: 'admin',
-        password: '111111'
+        password: 'cgeserver@2024'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],

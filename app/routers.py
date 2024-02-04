@@ -67,7 +67,7 @@ async def get_current_user(token: str = Depends(oauth2)) -> UserInfoSchema:
         role=user.role
         created_at=user.created_at
     )
-
+    
 @api_router.post("/ssr/add", response_model=ResponseModel[SSRModel])
 async def add(ssr_model: SSRModel, user: UserInfoSchema = Depends(get_current_user)) -> ResponseModel[SSRModel]:
     r: ResponseModel[SSRModel] = ResponseModel()

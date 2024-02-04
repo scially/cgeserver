@@ -1,33 +1,82 @@
 from enum import Enum
 from enum import unique
+from datetime import datetime
+from datetime import timedelta
 
+from fastapi import status
 from fastapi import APIRouter
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
 from fastapi import Request
+from fastapi import Depends
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
+
+from pydantic import BaseModel
+
+from jose import JWTError, jwt
 
 from app.crud import Caches
 from app.crud import UserCRUD
 from app.response import ResponseModel
 from app.models import SSRModel
 from app.models import UserModel
+from app.models import UserRole
 from app.schmeas import UserInfoSchema
 from app.schmeas import UserBaseSchema
+from app.config import settings
 
 oauth2 = OAuth2PasswordBearer(tokenUrl="/api/token")
 api_router = APIRouter(prefix="/api")
 ws_router  = APIRouter(prefix="/ws")
 
-@api_router.post("/api/ssr/add", response_model=ResponseModel[SSRModel])
-async def add(ssr_model: SSRModel) -> ResponseModel[SSRModel]:
+router = (api_router, ws_router)
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=15)) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"expire": expire})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2)) -> UserInfoSchema:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("username")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = UserCRUD().get_by_name(username)
+    if user is None:
+        raise credentials_exception
+    return UserInfoSchema(
+        name=user.name,
+        username=user.username,
+        role=user.role
+        created_at=user.created_at
+    )
+
+@api_router.post("/ssr/add", response_model=ResponseModel[SSRModel])
+async def add(ssr_model: SSRModel, user: UserInfoSchema = Depends(get_current_user)) -> ResponseModel[SSRModel]:
     r: ResponseModel[SSRModel] = ResponseModel()
     r.data = Caches.add(ssr_model).model
     r.status = 200
     r.msg = "create ssr success"
     return r
 
-@api_router.get("/api/ssr/list", response_model=ResponseModel[list[SSRModel]])
+@api_router.get("/ssr/list", response_model=ResponseModel[list[SSRModel]])
 async def list() -> ResponseModel[list[SSRModel]]:
     r: ResponseModel[SSRModel] = ResponseModel()
     r.data = Caches.values()
@@ -35,7 +84,7 @@ async def list() -> ResponseModel[list[SSRModel]]:
     r.msg = "list ssr success"
     return r
 
-@api_router.get("/api/ssr/get/{uid}", response_model=ResponseModel[SSRModel])
+@api_router.get("/ssr/get/{uid}", response_model=ResponseModel[SSRModel])
 async def get(uid: str) -> ResponseModel[SSRModel]:
     r: ResponseModel[SSRModel] = ResponseModel()
     ssr_instance = Caches.get(uid)
@@ -44,7 +93,7 @@ async def get(uid: str) -> ResponseModel[SSRModel]:
     r.msg = "get ssr success"
     return r
 
-@api_router.post("/api/ssr/run/{uid}", response_model=ResponseModel[str])
+@api_router.post("/ssr/run/{uid}", response_model=ResponseModel[str])
 async def run(uid: str, req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
@@ -63,7 +112,7 @@ async def run(uid: str, req: Request) -> ResponseModel[str]:
         r.status = 200
         return r
 
-@api_router.post("/api/ssr/stop/{uid}", response_model=ResponseModel[str])
+@api_router.post("ssr/stop/{uid}", response_model=ResponseModel[str])
 async def stop(uid: str, req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
@@ -102,27 +151,14 @@ async def server_websocket_endpoint(websocket: WebSocket, origin: StreamingServe
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         
-@api_router.post('/api/user/validate')
-def user_validate(user: UserBaseSchema) -> ResponseModel[UserInfoSchema]:
-    r: ResponseModel[bool] = ResponseModel()
-    user_validate = UserCRUD().get_by_name(user.username)
-    if user is None:
-        r.data = None
-        r.msg = "user not found"
-        r.status = 400
-    
-    if user_validate.password == user.password:
-        r.data = UserInfoSchema(
-            name=user_validate.name,
-            username=user_validate.username,
-            role=user_validate.role,
-            created_at=user_validate.created_at
-        )
-        r.status = 200
-        r.msg = "user validate success"
+@api_router.post('/token')
+async def user_login(form_data: OAuth2PasswordRequestForm=Depends()):
+    user = UserCRUD().get_by_name(form_data.username)
+    if user is None or user.password != form_data.password:
+        raise HTTPException(status_code=400, detail="invalid username or password")
     else:
-        r.data = None
-        r.status = 400
-        r.msg = "user validate failed"
-    
-    return r
+        access_token = create_access_token(
+            data={"username": user.username}
+            )
+
+        return {"access_token": access_token, "token_type": "bearer"}

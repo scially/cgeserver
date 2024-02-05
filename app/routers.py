@@ -61,12 +61,12 @@ async def get_current_user(token: str = Depends(oauth2)) -> UserInfoSchema:
     user = UserCRUD().get_by_name(username)
     if user is None:
         raise credentials_exception
+    
     return UserInfoSchema(
         name=user.name,
         username=user.username,
         role=user.role
-        created_at=user.created_at
-    )
+        created_at=user.created_at)
     
 @api_router.post("/ssr/add", response_model=ResponseModel[SSRModel])
 async def add(ssr_model: SSRModel, user: UserInfoSchema = Depends(get_current_user)) -> ResponseModel[SSRModel]:

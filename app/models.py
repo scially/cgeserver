@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlmodel import Field
 from sqlmodel import SQLModel
-from sqlmodel import Enum
+from sqlmodel import Relationship
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -20,22 +20,6 @@ from subprocess import Popen
 
 logger = logging.Logger(__name__)
 
-@enum.unique
-class UserRole(enum.IntEnum):
-    admin = 0
-    user = 1
-    guest = 2
-        
-class UserModel(SQLModel, table=True): 
-
-    
-    uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)
-    name: str = Field('')
-    username: str = Field(unique=True)
-    password: str
-    role: UserRole = UserRole.user
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
-    
 class SSRModel(SQLModel, table=True):
     uid: Optional[uuid.UUID] = Field(primary_key=True, default_factory=uuid.uuid4)
     name: str

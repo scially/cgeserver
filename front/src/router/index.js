@@ -32,12 +32,6 @@ import Layout from '@/layout'
  */
 export const constantRoutes = [
   {
-    path: '/login',
-    component: () => import('@/views/login/index'),
-    hidden: true
-  },
-
-  {
     path: '/404',
     component: () => import('@/views/404'),
     hidden: true
@@ -49,9 +43,9 @@ export const constantRoutes = [
     redirect: '/dashboard',
     children: [{
       path: 'dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
+      name: 'dashboard',
+      component: () => import('@/views/table/index'),
+      meta: { title: '推流实例', icon: 'dashboard' }
     }]
   },
 
@@ -150,12 +144,12 @@ export const constantRoutes = [
   },
 
   {
-    path: 'external-link',
+    path: 'SourceCode',
     component: Layout,
     children: [
       {
-        path: 'https://panjiachen.github.io/vue-element-admin-site/#/',
-        meta: { title: 'External Link', icon: 'link' }
+        path: 'https://github.com/scially/cgeserver',
+        meta: { title: 'SourceCode', icon: 'link' }
       }
     ]
   },
@@ -165,7 +159,7 @@ export const constantRoutes = [
 ]
 
 const createRouter = () => new Router({
-  // mode: 'history', // require service support
+  mode: 'hash', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })

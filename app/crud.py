@@ -85,11 +85,11 @@ class SSRModelCache:
     def add(self, model: SSRModel) -> SSRModelInstance:
         model = self._ssr_crud.create(model)
         self._cache[model.uid] = SSRModelInstance(model)
-        return self._cache[UUID(model.uid)]
+        return self._cache[model.uid]
     
     def update(self, model: SSRModel) -> None:
         model = self._ssr_crud.update(model)
-        self._cache[UUID(model.uid)] = SSRModelInstance(model)
+        self._cache[model.uid] = SSRModelInstance(model)
 
     def values(self)-> list[SSRModel]:
         return self._ssr_crud.list()

@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "cgeserver"
+version = "0.1.0"
+description = "cgeserver"
+authors = ["scially <imhwang0508@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.109.2"
+sqlmodel = "^0.0.14"
+pydantic-settings = "^2.1.0"
+websockets = "^12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

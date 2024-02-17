@@ -64,32 +64,32 @@ class SSRCRUD(SQLModelPlus[SSRModel]):
 class SSRModelCache:
     def __init__(self):
         self._ssr_crud = SSRCRUD()
-        self._cache: dict[UUID, SSRModelInstance] = dict()
+        self._cache: dict[str, SSRModelInstance] = dict()
             
     def get(self, uid: str) -> Optional[SSRModelInstance]:
-        hit_value = self._cache.get(UUID(uid))
+        hit_value = self._cache.get(uid)
         if hit_value == None:
             hit_value = self._ssr_crud.get(uid)
             if hit_value == None:
                 return None
             else:
-                self._cache[UUID(uid)] = SSRModelInstance(hit_value)
-        return self._cache[UUID(uid)]
+                self._cache[uid] = SSRModelInstance(hit_value)
+        return self._cache[uid]
     
     def delete(self, uid: str) -> None:
-        hit_value = self._cache.get(UUID(uid))
+        hit_value = self._cache.get(uid)
         if hit_value:
             self._ssr_crud.delete(uid)
-            del self._cache[UUID(uid)]
+            del self._cache[uid]
     
     def add(self, model: SSRModel) -> SSRModelInstance:
         model = self._ssr_crud.create(model)
-        self._cache[model.uid] = SSRModelInstance(model)
-        return self._cache[model.uid]
+        self._cache[str(model.uid)] = SSRModelInstance(model)
+        return self._cache[str(model.uid)]
     
     def update(self, model: SSRModel) -> None:
         model = self._ssr_crud.update(model)
-        self._cache[model.uid] = SSRModelInstance(model)
+        self._cache[str(model.uid)] = SSRModelInstance(model)
 
     def values(self)-> list[SSRModel]:
         return self._ssr_crud.list()

@@ -1,8 +1,11 @@
 from enum import Enum
 from enum import unique
+from typing import Annotated
+
 from datetime import datetime
 from datetime import timedelta
 from fastapi import APIRouter
+from fastapi import Body
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
 from fastapi import Request
@@ -32,7 +35,7 @@ async def list() -> ResponseModel[list[SSRModel]]:
     r.msg = "list ssr success"
     return r
 
-@api_router.get("/ssr/get/{uid}", response_model=ResponseModel[SSRModel])
+@api_router.get("/ssr/get", response_model=ResponseModel[SSRModel])
 async def get(uid: str) -> ResponseModel[SSRModel]:
     r: ResponseModel[SSRModel] = ResponseModel()
     ssr_instance = Caches.get(uid)
@@ -41,8 +44,21 @@ async def get(uid: str) -> ResponseModel[SSRModel]:
     r.msg = "get ssr success"
     return r
 
-@api_router.post("/ssr/run/{uid}", response_model=ResponseModel[str])
-async def run(uid: str, req: Request) -> ResponseModel[str]:
+@api_router.post('/ssr/delete', response_model=ResponseModel[str])
+async def delete(uid: Annotated[str, Body(embed=True)], req: Request):
+    ssr_instance = Caches.get(uid)
+    ssr_instance.stop(req.app)
+    
+    Caches.delete(uid)
+    r: ResponseModel[str] = ResponseModel()
+    ssr_instance = Caches.get(uid)
+    r.data = None
+    r.status = 200
+    r.msg = "delete ssr success"
+    return r
+
+@api_router.post("/ssr/run", response_model=ResponseModel[str])
+async def run(uid: Annotated[str, Body()], req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:
@@ -60,8 +76,8 @@ async def run(uid: str, req: Request) -> ResponseModel[str]:
         r.status = 200
         return r
 
-@api_router.post("ssr/stop/{uid}", response_model=ResponseModel[str])
-async def stop(uid: str, req: Request) -> ResponseModel[str]:
+@api_router.post("ssr/stop", response_model=ResponseModel[str])
+async def stop(uid: Annotated[str, Body()], req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:

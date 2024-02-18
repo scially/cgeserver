@@ -59,6 +59,8 @@ class SSRModelInstance:
         return self
     
     def run(self, app: FastAPI) -> bool:
+        result: bool = True
+        
         if self.model.uepath != '' and Path(self.model.uepath).exists() and not self.status:
             cmds = [self.model.uepath,
                     "-AudioMixer", 
@@ -77,14 +79,17 @@ class SSRModelInstance:
             
             logger.info("[Render] Render Start: %s", ' '.join(cmds))
             
-            return True
-        
-        app.mount(f"/static/{self.model.uid}", StaticFiles(directory=self.model.frontpath), str(self.model.uid))
-        
-        return True
+            result = result and True
+
+        if self.model.frontpath != '' and Path(self.model.frontpath).exists():
+            app.mount(f"/static/{self.model.uid}", StaticFiles(directory=self.model.frontpath), str(self.model.uid))
+            
+            result = result and True
+            
+        return result
 
 
-    def stop(self, app:FastAPI) -> None:
+    def stop(self, app:FastAPI) -> bool:
         # umount self static mount
         for index, route in enumerate(app.routes):
             if isinstance(route, Mount) and route.name == str(self.model.uid):
@@ -93,3 +98,5 @@ class SSRModelInstance:
             
         if self._process != None:
             self._process.kill()
+        
+        return True

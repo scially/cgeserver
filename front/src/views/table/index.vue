@@ -61,7 +61,7 @@
           <el-popover placement="right" title="详情" width="600" trigger="click">
             <p>推流地址: /streaming/server/{{ scope.row.uid }}</p>
             <p>拉染地址: /streaming/client/{{ scope.row.uid }}</p>
-            <p>渲染地址: /static/{{ scope.row.uid }}/index.html</p>
+            <p>渲染地址: /static/{{ scope.row.uid }}/index.html?data={{ (()=>{ return Date.now();})() }}</p>
             <p>信令地址: /message/{{ scope.row.uid }}</p>
             <p>UE路径: {{ scope.row.uepath }}</p>
             <p>前端路径: {{ scope.row.frontpath }}</p>
@@ -78,6 +78,7 @@
 
 <script>
 import { list, remove, add, query, start, stop } from '@/api/table'
+import { MessageBox, Message } from 'element-ui'
 
 export default {
   filters: {
@@ -107,6 +108,12 @@ export default {
   },
   created() {
     this.fetchData()
+  },
+  computed: {
+    // ssr frontpath refresh
+    date(){
+      return Date.now()
+    }
   },
   methods: {
     fetchData() {
@@ -146,22 +153,30 @@ export default {
     },
     handleSSRStart(ind) {
       start({ 'uid': this.list[ind].uid }).then(response => {
-        if(response.status === 200){
+        if(response.status === 200 && response.data){
           this.list[ind].status = true
         }else{
-
+          Message({
+            message: response.msg || 'Error',
+            type: 'error',
+            duration: 5 * 1000
+          })
         }
-      });
+      })
      
     },
     handleSSRStop(ind) {
       stop({ 'uid': this.list[ind].uid }).then(response => {
-        if(response.status === 200){
+        if(response.status === 200 && response.data){
           this.list[ind].status = false
         }else{
-
+          Message({
+            message: response.msg || 'Error',
+            type: 'error',
+            duration: 5 * 1000
+          })
         }
-      });
+      })
     }
   }
 }

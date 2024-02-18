@@ -66,40 +66,44 @@ async def delete(uid: Annotated[str, Body(embed=True)], req: Request):
     r.msg = "delete ssr success"
     return r
 
-@api_router.post("/ssr/start", response_model=ResponseModel[str])
-async def start(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseModel[str]:
+@api_router.post("/ssr/start", response_model=ResponseModel[bool])
+async def start(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseModel[bool]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:
+        r.data = False
         r.msg = "ssr not found"
-        r.status = 400
+        r.status = 200
         return r
     
     if ssr_instance.status is True:
+        r.data = True
         r.msg = 'ssr is running'
         r.status = 200
         return r
     else:
-        ssr_instance.run(req.app)
-        r.msg = "ssr start succeess"
+        r.data = ssr_instance.run(req.app)
+        r.msg = "ssr start succeess" if r.data else "ssr start failed"
         r.status = 200
         return r
 
-@api_router.post("ssr/stop", response_model=ResponseModel[str])
-async def stop(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseModel[str]:
+@api_router.post("/ssr/stop", response_model=ResponseModel[bool])
+async def stop(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseModel[bool]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:
         r.msg = "ssr not found"
-        r.status = 400
+        r.status = 200
+        r.data = False
         return r
     
     if ssr_instance.status == True:
-        ssr_instance.stop(req.app)
-        r.msg = 'ssr stop successed'
+        r.data = ssr_instance.stop(req.app)
+        r.msg = 'ssr stop successed' if r.data else 'ssr stop failed'
         r.status = 200
         return r
     else:
+        r.data = True
         r.msg = "ssr has stoped"
         r.status = 200
         return r

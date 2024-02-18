@@ -59,10 +59,10 @@
       <el-table-column label="推流详情" align="center">
         <template slot-scope="scope">
           <el-popover placement="right" title="详情" width="600" trigger="click">
-            <p>推流地址: /streaming/server/{{ scope.row.uid }}</p>
-            <p>拉染地址: /streaming/client/{{ scope.row.uid }}</p>
-            <p>渲染地址: /static/{{ scope.row.uid }}/index.html?data={{ (()=>{ return Date.now();})() }}</p>
-            <p>信令地址: /message/{{ scope.row.uid }}</p>
+            <p>推流地址: {{ baseUrl }}/streaming/server/{{ scope.row.uid }}</p>
+            <p>拉染地址: {{ baseUrl }}/streaming/client/{{ scope.row.uid }}</p>
+            <p>渲染地址: {{ baseUrl }}/static/{{ scope.row.uid }}/index.html?data={{ currentTime }}</p>
+            <p>信令地址: {{ baseUrl }}/message/{{ scope.row.uid }}</p>
             <p>UE路径: {{ scope.row.uepath }}</p>
             <p>前端路径: {{ scope.row.frontpath }}</p>
             <el-button slot="reference" size="mini">推流详情</el-button>
@@ -78,7 +78,7 @@
 
 <script>
 import { list, remove, add, query, start, stop } from '@/api/table'
-import { MessageBox, Message } from 'element-ui'
+import { Message } from 'element-ui'
 
 export default {
   filters: {
@@ -93,6 +93,8 @@ export default {
   },
   data() {
     return {
+      baseUrl: process.env.VUE_APP_BASE_API,
+
       dialogVisible: false,
       list: [],
       // ssr list loading
@@ -103,17 +105,14 @@ export default {
       ssrUEPath: '',
       ssrXResolution: 1920,
       ssrYResolution: 1080,
-      ssrBackgound: true
+      ssrBackgound: true,
+
+      // ssr frontpath refresh
+      currentTime: Date.now()
     }
   },
   created() {
     this.fetchData()
-  },
-  computed: {
-    // ssr frontpath refresh
-    date(){
-      return Date.now()
-    }
   },
   methods: {
     fetchData() {
@@ -121,7 +120,7 @@ export default {
       list().then(response => {
         this.list.splice(0)
         response.data.forEach(element => {
-          query({ 'uid': element.uid}).then(response =>{
+          query({ 'uid': element.uid }).then(response => {
             element['status'] = response.data
             this.list.push(element)
           })
@@ -130,6 +129,7 @@ export default {
       })
     },
     handleSSRDelete(ind, ssr) {
+      this.currentTime = Date.now()
       const uid = ssr.uid
       remove({ 'uid': uid }).then(response => {
         const ind = this.list.findIndex(e => e.uid === uid)
@@ -152,10 +152,11 @@ export default {
       })
     },
     handleSSRStart(ind) {
+      this.currentTime = Date.now()
       start({ 'uid': this.list[ind].uid }).then(response => {
-        if(response.status === 200 && response.data){
+        if (response.status === 200 && response.data) {
           this.list[ind].status = true
-        }else{
+        } else {
           Message({
             message: response.msg || 'Error',
             type: 'error',
@@ -163,13 +164,13 @@ export default {
           })
         }
       })
-     
     },
     handleSSRStop(ind) {
+      this.currentTime = Date.now()
       stop({ 'uid': this.list[ind].uid }).then(response => {
-        if(response.status === 200 && response.data){
+        if (response.status === 200 && response.data) {
           this.list[ind].status = false
-        }else{
+        } else {
           Message({
             message: response.msg || 'Error',
             type: 'error',

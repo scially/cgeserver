@@ -22,3 +22,27 @@ export function add(data) {
     data: data
   })
 }
+
+export function query(params){
+  return request({
+    url: '/api/ssr/status',
+    method: 'get',
+    params: params
+  })
+}
+
+export function start(data){
+  return request({
+    url: '/api/ssr/start',
+    method: 'post',
+    data: data
+  })
+}
+
+export function stop(data){
+  return request({
+    url: '/api/ssr/stop',
+    method: 'post',
+    data: data
+  })  
+}

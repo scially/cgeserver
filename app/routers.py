@@ -35,6 +35,15 @@ async def list() -> ResponseModel[list[SSRModel]]:
     r.msg = "list ssr success"
     return r
 
+@api_router.get("/ssr/status", response_model=ResponseModel[bool])
+async def status(uid: str) -> ResponseModel[bool]:
+    r: ResponseModel[bool] = ResponseModel()
+    ssr_instance = Caches.get(uid)
+    r.data = ssr_instance.status
+    r.status = 200
+    r.msg = "get ssr status success"
+    return r
+
 @api_router.get("/ssr/get", response_model=ResponseModel[SSRModel])
 async def get(uid: str) -> ResponseModel[SSRModel]:
     r: ResponseModel[SSRModel] = ResponseModel()
@@ -57,8 +66,8 @@ async def delete(uid: Annotated[str, Body(embed=True)], req: Request):
     r.msg = "delete ssr success"
     return r
 
-@api_router.post("/ssr/run", response_model=ResponseModel[str])
-async def run(uid: Annotated[str, Body()], req: Request) -> ResponseModel[str]:
+@api_router.post("/ssr/start", response_model=ResponseModel[str])
+async def start(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:
@@ -77,7 +86,7 @@ async def run(uid: Annotated[str, Body()], req: Request) -> ResponseModel[str]:
         return r
 
 @api_router.post("ssr/stop", response_model=ResponseModel[str])
-async def stop(uid: Annotated[str, Body()], req: Request) -> ResponseModel[str]:
+async def stop(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseModel[str]:
     ssr_instance = Caches.get(uid)
     r: ResponseModel[str] = ResponseModel()
     if ssr_instance is None:

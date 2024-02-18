@@ -65,7 +65,7 @@ class SSRModelCache:
     def __init__(self):
         self._ssr_crud = SSRCRUD()
         self._cache: dict[str, SSRModelInstance] = dict()
-            
+
     def get(self, uid: str) -> Optional[SSRModelInstance]:
         hit_value = self._cache.get(uid)
         if hit_value == None:

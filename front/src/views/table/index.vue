@@ -56,19 +56,20 @@
           <el-switch :value="scope.row.status" active-color="#13ce66" inactive-color="#ff4949" />
         </template>
       </el-table-column>
-      <el-table-column label="推流详情" align="center">
+      <el-table-column label="推流详情" align="center" width="500">
         <template slot-scope="scope">
           <el-popover placement="right" title="详情" width="600" trigger="click">
-            <p>推流地址: {{ baseUrl }}/streaming/server/{{ scope.row.uid }}</p>
-            <p>拉染地址: {{ baseUrl }}/streaming/client/{{ scope.row.uid }}</p>
+            <p>推流地址: {{ baseUrl.replace('http', 'ws') }}/ws/streaming/server/{{ scope.row.uid }}</p>
+            <p>拉染地址: {{ baseUrl.replace('http', 'ws') }}/ws/streaming/client/{{ scope.row.uid }}</p>
             <p>渲染地址: {{ baseUrl }}/static/{{ scope.row.uid }}/index.html?data={{ currentTime }}</p>
-            <p>信令地址: {{ baseUrl }}/message/{{ scope.row.uid }}</p>
+            <p>信令地址: {{ baseUrl.replace('http', 'ws') }}/ws/streaming/signal/{{ scope.row.uid }}</p>
             <p>UE路径: {{ scope.row.uepath }}</p>
             <p>前端路径: {{ scope.row.frontpath }}</p>
             <el-button slot="reference" size="mini">推流详情</el-button>
           </el-popover>
           <el-button size="mini" :disabled="scope.row.status" @click="handleSSRStart(scope.$index)">开始推流</el-button>
           <el-button size="mini" :disabled="!scope.row.status" @click="handleSSRStop(scope.$index)">停止推流</el-button>
+          <el-button size="mini" @click="handleSSRNavigate(scope.row)">跳转</el-button>
           <el-button size="mini" type="danger" @click="handleSSRDelete(scope.$index, scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -79,6 +80,8 @@
 <script>
 import { list, remove, add, query, start, stop } from '@/api/table'
 import { Message } from 'element-ui'
+
+let signalWebSocket = null
 
 export default {
   filters: {
@@ -122,6 +125,10 @@ export default {
         response.data.forEach(element => {
           query({ 'uid': element.uid }).then(response => {
             element['status'] = response.data
+            if (element['status']) {
+              signalWebSocket = new WebSocket(`${this.baseUrl.replace('http', 'ws')}/ws/streaming/signal/${element.uid}`)
+              signalWebSocket.onmessage = this.handleSignalMessage
+            }
             this.list.push(element)
           })
         })
@@ -156,6 +163,8 @@ export default {
       start({ 'uid': this.list[ind].uid }).then(response => {
         if (response.status === 200 && response.data) {
           this.list[ind].status = true
+          signalWebSocket = new WebSocket(`${this.baseUrl.replace('http', 'ws')}/ws/streaming/signal/${this.list[ind].uid}`)
+          signalWebSocket.onmessage = this.handleSignalMessage
         } else {
           Message({
             message: response.msg || 'Error',
@@ -170,6 +179,7 @@ export default {
       stop({ 'uid': this.list[ind].uid }).then(response => {
         if (response.status === 200 && response.data) {
           this.list[ind].status = false
+          signalWebSocket = null
         } else {
           Message({
             message: response.msg || 'Error',
@@ -178,6 +188,14 @@ export default {
           })
         }
       })
+    },
+    handleSSRNavigate(ssr) {
+      window.open(`${this.baseUrl}/static/${ssr.uid}/index.html?data=${Date.now()}`)
+    },
+
+    // signal websocket event
+    handleSignalMessage(event) {
+      console.log(event.data)
     }
   }
 }

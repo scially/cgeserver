@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.routing import Mount
 
 from app.ws import WebSocketManager
+from app.ws import SignalWebSocketManager
 from app.config import settings
 
 from pathlib import Path
@@ -34,7 +35,7 @@ class SSRModelInstance:
         self._status: bool = False
         self._client_manager: WebSocketManager = WebSocketManager()
         self._server_manager: WebSocketManager = WebSocketManager()
-
+        self._signal_manager: WebSocketManager = SignalWebSocketManager()
         self._process: Popen = None
         
     @property
@@ -50,6 +51,10 @@ class SSRModelInstance:
         return self._server_manager
     
     @property
+    def signal_manager(self) -> WebSocketManager:
+        return self._signal_manager
+    
+    @property
     def status(self) -> bool: 
         return self._status
     
@@ -59,7 +64,8 @@ class SSRModelInstance:
         return self
     
     def run(self, app: FastAPI) -> bool:
-        result: bool = True
+        ue_result: bool = False
+        front_result: bool = False
         
         if self.model.uepath != '' and Path(self.model.uepath).exists() and not self.status:
             cmds = [self.model.uepath,
@@ -79,15 +85,15 @@ class SSRModelInstance:
             
             logger.info("[Render] Render Start: %s", ' '.join(cmds))
             
-            result = result and True
+            ue_result = True
 
         if self.model.frontpath != '' and Path(self.model.frontpath).exists():
             app.mount(f"/static/{self.model.uid}", StaticFiles(directory=self.model.frontpath), str(self.model.uid))
             
-            result = result and True
+            front_result =True
             
-        return result
-
+        self.status = ue_result or front_result
+        return self.status
 
     def stop(self, app:FastAPI) -> bool:
         # umount self static mount

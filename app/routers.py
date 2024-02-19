@@ -112,18 +112,24 @@ async def stop(uid: Annotated[str, Body(embed=True)], req: Request) -> ResponseM
 class StreamingServerOrigin(str, Enum):
     client = 'client'
     server = 'server'
+    signal = 'signal'
         
 @ws_router.websocket("/streaming/{origin}/{uid}")
-async def server_websocket_endpoint(websocket: WebSocket, origin: StreamingServerOrigin,uid: str):
+async def server_websocket_endpoint(websocket: WebSocket, origin: StreamingServerOrigin, uid: str):
     ssr_instance = Caches.get(uid)
     if ssr_instance == None or ssr_instance.status == False:
         return
     
-    manager = ssr_instance.server_manager[uid] if origin == StreamingServerOrigin.server else ssr_instance.client_manager
-    
+    if origin == StreamingServerOrigin.server:
+        manager = ssr_instance.server_manager 
+    elif origin == StreamingServerOrigin.client:
+        manager = ssr_instance.client_manager
+    elif origin == StreamingServerOrigin.signal:
+        manager = ssr_instance.signal_manager
+        
     await manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()
+            await manager.receive_message(websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)

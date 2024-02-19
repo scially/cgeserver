@@ -36,6 +36,7 @@ if (process.env.NODE_ENV === 'production') {
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
+Vue.prototype.$open = window.open
 
 new Vue({
   el: '#app',

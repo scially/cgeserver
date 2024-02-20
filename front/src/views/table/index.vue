@@ -73,19 +73,30 @@
           <el-button size="mini" @click="handleSSRNavigate(scope.row)">跳转</el-button>
           <el-button size="mini" @click="handleSSRUpdateDialog(scope.row)">编辑</el-button>
           <el-dialog title="修改SSR" :visible.sync="updatgeDialogVisible" width="40%">
-            <p>推流名称</p><el-input v-model="ssrName" />
-            <p>前端路径</p><el-input v-model="ssrFrontPath" />
-            <p>UE路径</p><el-input v-model="ssrUEPath"/>
-            <p>分辨率</p>
-            <div>
-              <el-input v-model="ssrXResolution" type="number">
-                <template slot="prepend">X</template>
-              </el-input>
-              <el-input v-model="ssrYResolution" type="number">
-                <template slot="prepend">Y</template>
-              </el-input>
-            </div>
-            <el-checkbox v-model="ssrBackgound">后台运行</el-checkbox>
+            <el-form ref="form" :model="updateSSRForm" label-width="80px">
+              <el-form-item label="推流名称">
+                <el-input v-model="updateSSRForm.name"></el-input>
+              </el-form-item>
+              <el-form-item label="前端路径">
+                <el-input v-model="updateSSRForm.frontpath"></el-input>
+              </el-form-item>
+              <el-form-item label="UE路径">
+                <el-input v-model="updateSSRForm.uepath"></el-input>
+              </el-form-item>
+              <el-form-item label="分辨率">
+                <div>
+                  <el-input v-model="updateSSRForm.xresolution" type="number">
+                    <template slot="prepend">X</template>
+                  </el-input>
+                  <el-input v-model="updateSSRForm.yresolution" type="number">
+                    <template slot="prepend">Y</template>
+                  </el-input>
+                </div>
+              </el-form-item>
+              <el-form-item label="后台运行">
+                <el-checkbox v-model="updateSSRForm.background"></el-checkbox>
+              </el-form-item>
+            </el-form>
             <span slot="footer" class="dialog-footer">
               <el-button @click="updatgeDialogVisible = false">取 消</el-button>
               <el-button type="primary" @click="handleSSRUpdate(scope.$index, scope.row)">确 定</el-button>
@@ -125,13 +136,14 @@ export default {
       // ssr instance add or update
       dialogVisible: false,
       updatgeDialogVisible: false,
-      ssrName: '',
-      ssrFrontPath: '',
-      ssrUEPath: '',
-      ssrXResolution: 1920,
-      ssrYResolution: 1080,
-      ssrBackgound: true,
-
+      updateSSRForm: {
+          name: '',
+          frontpath: '',
+          uepath: '',
+          xresolution: 1920,
+          yresolution: 1080,
+          background: true,
+      },
       // ssr frontpath refresh
       currentTime: Date.now()
     }
@@ -217,12 +229,12 @@ export default {
 
     handleSSRUpdateDialog(ssr){
       this.ssrUid = ssr.uid
-      this.ssrName = ssr.name
-      this.ssrFrontPath = ssr.frontpath
-      this.ssrUEPath = ssr.uepath
-      this.ssrXResolution = ssr.xresolution
-      this.ssrYResolution = ssr.yresolution
-      this.ssrBackgound = ssr.background
+      this.updateSSRForm.name = ssr.name
+      this.updateSSRForm.frontpath = ssr.frontpath
+      this.updateSSRForm.uepath = ssr.uepath
+      this.updateSSRForm.xresolution = ssr.xresolution
+      this.updateSSRForm.yresolution = ssr.yresolution
+      this.updateSSRForm.background = ssr.background
 
       if (ssr.status) {
         Message({
@@ -236,13 +248,13 @@ export default {
     },
     handleSSRUpdate(index, ssr) {  
       const new_ssr = {
-          uid: this.ssrUid,
-          name: this.ssrName,
-          background: this.ssrBackgound,
-          uepath: this.ssrUEPath,
-          frontpath: this.ssrFrontPath,
-          xresolution: this.ssrXResolution,
-          yresolution: this.ssrYResolution
+          uid: ssr.uid,
+          name: this.updateSSRForm.name,
+          background: this.updateSSRForm.background,
+          uepath: this.updateSSRForm.uepath,
+          frontpath: this.updateSSRForm.frontpath,
+          xresolution: this.updateSSRForm.xresolution,
+          yresolution: this.updateSSRForm.yresolution
         }
       update(new_ssr).then(response => {
         if (response.status === 200) {

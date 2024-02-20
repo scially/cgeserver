@@ -31,6 +31,14 @@ export function query(params){
   })
 }
 
+export function update(data){
+  return request({
+    url: '/api/ssr/update',
+    method: 'post',
+    data: data
+  })
+}
+
 export function start(data){
   return request({
     url: '/api/ssr/start',

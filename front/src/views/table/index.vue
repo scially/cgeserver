@@ -1,10 +1,11 @@
 <template>
   <div class="app-container">
     <el-button @click="dialogVisible = true">添加</el-button>
-    <el-dialog title="添加SSR" :visible.sync="dialogVisible" width="30%">
+    <el-dialog title="添加SSR" :visible.sync="dialogVisible" width="40%">
       <p>推流名称</p><el-input v-model="ssrName" placeholder="ssr-demo" />
       <p>前端路径</p><el-input v-model="ssrFrontPath" placeholder="d:/vueproject/" />
-      <p>UE路径</p><el-input v-model="ssrUEPath" placeholder="d:/ueproject/content/win64/ue.exe" />
+      <p>UE路径</p><el-input v-model="ssrUEPath"
+        placeholder="E:/Project/cgeservertest/Windows/cgeservertest/Binaries/Win64/cgeservertest.exe" />
       <p>分辨率</p>
       <div>
         <el-input v-model="ssrXResolution" type="number">
@@ -70,6 +71,27 @@
           <el-button size="mini" :disabled="scope.row.status" @click="handleSSRStart(scope.$index)">开始推流</el-button>
           <el-button size="mini" :disabled="!scope.row.status" @click="handleSSRStop(scope.$index)">停止推流</el-button>
           <el-button size="mini" @click="handleSSRNavigate(scope.row)">跳转</el-button>
+          <el-button size="mini" @click="handleSSRUpdateDialog(scope.row)">编辑</el-button>
+          <el-dialog title="修改SSR" :visible.sync="updatgeDialogVisible" width="40%">
+            <p>推流名称</p><el-input v-model="ssrName" />
+            <p>前端路径</p><el-input v-model="ssrFrontPath" />
+            <p>UE路径</p><el-input v-model="ssrUEPath"/>
+            <p>分辨率</p>
+            <div>
+              <el-input v-model="ssrXResolution" type="number">
+                <template slot="prepend">X</template>
+              </el-input>
+              <el-input v-model="ssrYResolution" type="number">
+                <template slot="prepend">Y</template>
+              </el-input>
+            </div>
+            <el-checkbox v-model="ssrBackgound">后台运行</el-checkbox>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="updatgeDialogVisible = false">取 消</el-button>
+              <el-button type="primary" @click="handleSSRUpdate(scope.$index, scope.row)">确 定</el-button>
+            </span>
+          </el-dialog>
+
           <el-button size="mini" type="danger" @click="handleSSRDelete(scope.$index, scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -78,7 +100,7 @@
 </template>
 
 <script>
-import { list, remove, add, query, start, stop } from '@/api/table'
+import { list, remove, add, query, update, start, stop } from '@/api/table'
 import { Message } from 'element-ui'
 
 let signalWebSocket = null
@@ -97,12 +119,12 @@ export default {
   data() {
     return {
       baseUrl: process.env.VUE_APP_BASE_API,
-
-      dialogVisible: false,
       list: [],
       // ssr list loading
       listLoading: true,
-      // ssr instance add
+      // ssr instance add or update
+      dialogVisible: false,
+      updatgeDialogVisible: false,
       ssrName: '',
       ssrFrontPath: '',
       ssrUEPath: '',
@@ -193,6 +215,48 @@ export default {
       window.open(`${this.baseUrl}/static/${ssr.uid}/index.html?data=${Date.now()}`)
     },
 
+    handleSSRUpdateDialog(ssr){
+      this.ssrUid = ssr.uid
+      this.ssrName = ssr.name
+      this.ssrFrontPath = ssr.frontpath
+      this.ssrUEPath = ssr.uepath
+      this.ssrXResolution = ssr.xresolution
+      this.ssrYResolution = ssr.yresolution
+      this.ssrBackgound = ssr.background
+
+      if (ssr.status) {
+        Message({
+          message: '请先停止推流',
+          type: 'error',
+          duration: 5 * 1000
+        })
+      } else {
+        this.updatgeDialogVisible = true
+      }
+    },
+    handleSSRUpdate(index, ssr) {  
+      const new_ssr = {
+          uid: this.ssrUid,
+          name: this.ssrName,
+          background: this.ssrBackgound,
+          uepath: this.ssrUEPath,
+          frontpath: this.ssrFrontPath,
+          xresolution: this.ssrXResolution,
+          yresolution: this.ssrYResolution
+        }
+      update(new_ssr).then(response => {
+        if (response.status === 200) {
+            this.list[index] = response.data
+            this.updatgeDialogVisible = false
+        } else {
+          Message({
+            message: '修改失败',
+            type: 'error',
+            duration: 5 * 1000
+          })
+        }
+      })
+    },
     // signal websocket event
     handleSignalMessage(event) {
       console.log(event.data)

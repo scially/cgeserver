@@ -14,4 +14,7 @@ class Settings(BaseSettings):
     SECRET_ALGORITHM: str = "HS256"
     SECRET_TOKEN_EXPIRE_MINUTES: int = 10
 
+    SSR_HOST: str = '127.0.0.1'
+    SSR_ICE_ENABLE: bool = False
+    
 settings = Settings()

@@ -87,10 +87,20 @@ class SSRModelCache:
         self._cache[str(model.uid)] = SSRModelInstance(model)
         return self._cache[str(model.uid)]
     
-    def update(self, model: SSRModel) -> None:
-        model = self._ssr_crud.update(model)
+    def update(self, model: SSRModel) -> SSRModelInstance:
+        old = self._ssr_crud.get(str(model.uid))
+        
+        old.name = model.name
+        old.background = model.background
+        old.frontpath = model.frontpath
+        old.uepath = model.uepath
+        old.xresolution = model.xresolution
+        old.yresolution = model.yresolution
+        
+        model = self._ssr_crud.update(old)
         self._cache[str(model.uid)] = SSRModelInstance(model)
-
+        return self._cache[str(model.uid)]
+    
     def values(self)-> list[SSRModel]:
         return self._ssr_crud.list()
 

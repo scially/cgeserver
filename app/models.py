@@ -9,7 +9,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.routing import Mount
 
-from app.ws import WebSocketManager
+from app.ws import WebSocketManagerBase
+from app.ws import StreamingWebSocketManager
 from app.ws import SignalWebSocketManager
 from app.config import settings
 
@@ -31,57 +32,52 @@ class SSRModel(SQLModel, table=True):
 
 class SSRModelInstance:
     def __init__(self, model: SSRModel):
-        self._model = model
-        self._status: bool = False
-        self._client_manager: WebSocketManager = WebSocketManager()
-        self._server_manager: WebSocketManager = WebSocketManager()
-        self._signal_manager: WebSocketManager = SignalWebSocketManager()
-        self._process: Popen = None
+        self.__model = model
+        self.__status: bool = False
+        self.__ssr_manager: WebSocketManagerBase = StreamingWebSocketManager()
+        self.__signal_manager: WebSocketManagerBase = SignalWebSocketManager()
+        self.__process: Popen = None
         
     @property
     def model(self) -> SSRModel:
-        return self._model
+        return self.__model
     
     @property
-    def client_manager(self) -> WebSocketManager:
-        return self._client_manager
+    def ssr_manager(self) -> WebSocketManagerBase:
+        return self.__ssr_manager
     
     @property
-    def server_manager(self) -> WebSocketManager:
-        return self._server_manager
-    
-    @property
-    def signal_manager(self) -> WebSocketManager:
-        return self._signal_manager
+    def signal_manager(self) -> WebSocketManagerBase:
+        return self.__signal_manager
     
     @property
     def status(self) -> bool: 
-        return self._status
+        return self.__status
     
     @status.setter
     def status(self, sta: bool):
-        self._status = sta
+        self.__status = sta
         return self
     
     def run(self, app: FastAPI) -> bool:
         ue_result: bool = False
         front_result: bool = False
         
-        if self.model.uepath != '' and Path(self.model.uepath).exists() and not self.status:
+        if self.model.uepath != '' and Path(self.model.uepath).exists() and not self.__process:
             cmds = [self.model.uepath,
                     "-AudioMixer", 
                     "-NoTextureStreaming", 
                     "-binnedmalloc3", 
                     "-AllowPixelStreamingCommands", 
-                    f"-PixelStreamingURL=ws://127.0.0.1:{settings.PORT}/client/{self.model.uid}", 
-                    f"-ws=ws://127.0.0.1:{settings.PORT}/message/{self.model.uid}"]
+                    f"-PixelStreamingURL=ws://127.0.0.1:{settings.PROJECT_PORT}/ws/streaming/server/{self.model.uid}", 
+                    f"-ws=ws://127.0.0.1:{settings.PROJECT_PORT}/ws/streaming/signal/{self.model.uid}"]
             
             if self.model.background:
                 cmds = cmds + ["-RenderOffScreen", "-ForceRes"]
             
             cmds = cmds + [f"-ResX={self.model.xresolution}", f"-Resy={self.model.xresolution}"]
             cmds = cmds + ["-NvEncH264ConfigLevel=NV_ENC_LEVEL_H264_52"]
-            self._process = Popen(cmds)
+            self.__process = Popen(cmds)
             
             logger.info("[Render] Render Start: %s", ' '.join(cmds))
             
@@ -102,7 +98,10 @@ class SSRModelInstance:
                 del app.routes[index]
                 break
             
-        if self._process != None:
-            self._process.kill()
+        if self.__process != None:
+            self.__process.kill()
+            self.__process.wait()
+            self.__process = None
         
+        self.status = False
         return True

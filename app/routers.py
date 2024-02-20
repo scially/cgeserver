@@ -53,6 +53,22 @@ async def get(uid: str) -> ResponseModel[SSRModel]:
     r.msg = "get ssr success"
     return r
 
+@api_router.post('/ssr/update', response_model=ResponseModel[SSRModel])
+async def update(ssr_model: SSRModel, req: Request) -> ResponseModel[SSRModel]:
+    ssr_instance = Caches.get(ssr_model.uid)
+    if ssr_instance is None:
+        r: ResponseModel[SSRModel] = ResponseModel()        
+        r.data = None
+        r.status = 400
+        r.msg = "ssr not found"
+        return r
+    
+    r: ResponseModel[SSRModel] = ResponseModel()
+    r.data = Caches.update(ssr_model).model
+    r.status = 200
+    r.msg = "update ssr success"
+    return r
+
 @api_router.post('/ssr/delete', response_model=ResponseModel[str])
 async def delete(uid: Annotated[str, Body(embed=True)], req: Request):
     ssr_instance = Caches.get(uid)
@@ -121,15 +137,24 @@ async def server_websocket_endpoint(websocket: WebSocket, origin: StreamingServe
         return
     
     if origin == StreamingServerOrigin.server:
-        manager = ssr_instance.server_manager 
+        await ssr_instance.ssr_manager.connect(websocket, type_='server')
     elif origin == StreamingServerOrigin.client:
-        manager = ssr_instance.client_manager
+        await ssr_instance.ssr_manager.connect(websocket, type_='client')
     elif origin == StreamingServerOrigin.signal:
-        manager = ssr_instance.signal_manager
+        await ssr_instance.signal_manager.connect(websocket)
         
-    await manager.connect(websocket)
     try:
         while True:
-            await manager.receive_message(websocket)
+            if origin == StreamingServerOrigin.server:
+                await ssr_instance.ssr_manager.receive_message(websocket, type_='server')
+            elif origin == StreamingServerOrigin.client:
+                await ssr_instance.ssr_manager.receive_message(websocket, type_='client')
+            elif origin == StreamingServerOrigin.signal:
+                await ssr_instance.signal_manager.receive_message(websocket)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        if origin == StreamingServerOrigin.server:
+            await ssr_instance.ssr_manager.disconnect(websocket, type_='server')
+        elif origin == StreamingServerOrigin.client:
+            await ssr_instance.ssr_manager.disconnect(websocket, type_='client')
+        elif origin == StreamingServerOrigin.signal:
+            await ssr_instance.signal_manager.disconnect(websocket)

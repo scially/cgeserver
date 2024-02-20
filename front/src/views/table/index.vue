@@ -238,7 +238,7 @@ export default {
 
       if (ssr.status) {
         Message({
-          message: '请先停止推流',
+          message: '先停止推流',
           type: 'error',
           duration: 5 * 1000
         })

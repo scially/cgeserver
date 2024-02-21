@@ -52,5 +52,5 @@ export function stop(data) {
     url: '/api/ssr/stop',
     method: 'post',
     data: data
-  })  
+  })
 }

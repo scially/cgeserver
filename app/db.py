@@ -3,7 +3,7 @@ from sqlmodel import SQLModel
 from app.config import settings
 
 def init_engine():
-    engine = create_engine(settings.DATABASE_URL, echo=settings.PRODUCTION)
+    engine = create_engine(settings.DATABASE_URL, echo=settings.PRODUCTION != 'production')
     return engine
 
 engine = init_engine()

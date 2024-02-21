@@ -3,7 +3,6 @@ from datetime import datetime
 
 from sqlmodel import Field
 from sqlmodel import SQLModel
-from sqlmodel import Relationship
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles

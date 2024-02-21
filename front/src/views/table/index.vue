@@ -1,24 +1,36 @@
 <template>
   <div class="app-container">
-    <el-button @click="dialogVisible = true">添加</el-button>
-    <el-dialog title="添加SSR" :visible.sync="dialogVisible" width="40%">
-      <p>推流名称</p><el-input v-model="ssrName" placeholder="ssr-demo" />
-      <p>前端路径</p><el-input v-model="ssrFrontPath" placeholder="d:/vueproject/" />
-      <p>UE路径</p><el-input v-model="ssrUEPath"
-        placeholder="E:/Project/cgeservertest/Windows/cgeservertest/Binaries/Win64/cgeservertest.exe" />
-      <p>分辨率</p>
-      <div>
-        <el-input v-model="ssrXResolution" type="number">
-          <template slot="prepend">X</template>
-        </el-input>
-        <el-input v-model="ssrYResolution" type="number">
-          <template slot="prepend">Y</template>
-        </el-input>
-      </div>
-      <el-checkbox v-model="ssrBackgound">后台运行</el-checkbox>
+    <el-button @click="handleSSRUpdateDialog(null)">添加</el-button>
+    <el-dialog title="修改SSR" :visible.sync="dialogVisible" width="40%">
+      <el-form ref="form" :model="updateOrAddSSRForm" label-width="80px">
+        <input v-model="updateOrAddSSRForm.uid" hidden type="text">
+        <el-form-item label="推流名称">
+          <el-input v-model="updateOrAddSSRForm.name" />
+        </el-form-item>
+        <el-form-item label="前端路径">
+          <el-input v-model="updateOrAddSSRForm.frontpath" />
+        </el-form-item>
+        <el-form-item label="UE路径">
+          <el-input v-model="updateOrAddSSRForm.uepath" placeholder="E:/Project/cgeservertest/Windows/cgeservertest/Binaries/Win64/cgeservertest.exe" />
+        </el-form-item>
+        <el-form-item label="分辨率">
+          <div>
+            <el-input v-model="updateOrAddSSRForm.xresolution" type="number">
+              <template slot="prepend">X</template>
+            </el-input>
+            <el-input v-model="updateOrAddSSRForm.yresolution" type="number">
+              <template slot="prepend">Y</template>
+            </el-input>
+          </div>
+        </el-form-item>
+        <el-form-item label="后台运行">
+          <el-checkbox v-model="updateOrAddSSRForm.background" />
+        </el-form-item>
+      </el-form>
+
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handleSSRAdd()">确 定</el-button>
+        <el-button type="primary" @click="handleSSRUpdateOrAdd()">确 定</el-button>
       </span>
     </el-dialog>
     <el-table v-loading="listLoading" :data="list" element-loading-text="Loading" border fit highlight-current-row>
@@ -37,16 +49,6 @@
           <el-checkbox :value="scope.row.background" />
         </template>
       </el-table-column>
-      <!-- <el-table-column label="推流路径" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.uepath }}
-        </template>
-      </el-table-column> -->
-      <!-- <el-table-column class-name="status-col" label="前端路径" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.frontpath }}
-        </template>
-      </el-table-column> -->
       <el-table-column align="center" label="推流分辨率">
         <template slot-scope="scope">
           <span>{{ scope.row.xresolution }} x {{ scope.row.yresolution }}</span>
@@ -72,36 +74,6 @@
           <el-button size="mini" :disabled="!scope.row.status" @click="handleSSRStop(scope.$index)">停止推流</el-button>
           <el-button size="mini" @click="handleSSRNavigate(scope.row)">跳转</el-button>
           <el-button size="mini" @click="handleSSRUpdateDialog(scope.row)">编辑</el-button>
-          <el-dialog title="修改SSR" :visible.sync="updatgeDialogVisible" width="40%">
-            <el-form ref="form" :model="updateSSRForm" label-width="80px">
-              <el-form-item label="推流名称">
-                <el-input v-model="updateSSRForm.name"></el-input>
-              </el-form-item>
-              <el-form-item label="前端路径">
-                <el-input v-model="updateSSRForm.frontpath"></el-input>
-              </el-form-item>
-              <el-form-item label="UE路径">
-                <el-input v-model="updateSSRForm.uepath"></el-input>
-              </el-form-item>
-              <el-form-item label="分辨率">
-                <div>
-                  <el-input v-model="updateSSRForm.xresolution" type="number">
-                    <template slot="prepend">X</template>
-                  </el-input>
-                  <el-input v-model="updateSSRForm.yresolution" type="number">
-                    <template slot="prepend">Y</template>
-                  </el-input>
-                </div>
-              </el-form-item>
-              <el-form-item label="后台运行">
-                <el-checkbox v-model="updateSSRForm.background"></el-checkbox>
-              </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-              <el-button @click="updatgeDialogVisible = false">取 消</el-button>
-              <el-button type="primary" @click="handleSSRUpdate(scope.$index, scope.row)">确 定</el-button>
-            </span>
-          </el-dialog>
 
           <el-button size="mini" type="danger" @click="handleSSRDelete(scope.$index, scope.row)">删除</el-button>
         </template>
@@ -135,14 +107,14 @@ export default {
       listLoading: true,
       // ssr instance add or update
       dialogVisible: false,
-      updatgeDialogVisible: false,
-      updateSSRForm: {
-          name: '',
-          frontpath: '',
-          uepath: '',
-          xresolution: 1920,
-          yresolution: 1080,
-          background: true,
+      updateOrAddSSRForm: {
+        uid: '',
+        name: '',
+        frontpath: '',
+        uepath: '',
+        xresolution: 1920,
+        yresolution: 1080,
+        background: true
       },
       // ssr frontpath refresh
       currentTime: Date.now()
@@ -175,21 +147,6 @@ export default {
       remove({ 'uid': uid }).then(response => {
         const ind = this.list.findIndex(e => e.uid === uid)
         this.list.splice(ind, 1)
-      })
-    },
-    handleSSRAdd() {
-      const ssr = {
-        name: this.ssrName,
-        background: this.ssrBackgound,
-        uepath: this.ssrUEPath,
-        frontpath: this.ssrFrontPath,
-        xresolution: this.ssrXResolution,
-        yresolution: this.ssrYResolution
-      }
-
-      this.dialogVisible = false
-      add(ssr).then(response => {
-        this.list.push(response.data)
       })
     },
     handleSSRStart(ind) {
@@ -227,47 +184,65 @@ export default {
       window.open(`${this.baseUrl}/static/${ssr.uid}/index.html?data=${Date.now()}`)
     },
 
-    handleSSRUpdateDialog(ssr){
-      this.ssrUid = ssr.uid
-      this.updateSSRForm.name = ssr.name
-      this.updateSSRForm.frontpath = ssr.frontpath
-      this.updateSSRForm.uepath = ssr.uepath
-      this.updateSSRForm.xresolution = ssr.xresolution
-      this.updateSSRForm.yresolution = ssr.yresolution
-      this.updateSSRForm.background = ssr.background
+    handleSSRUpdateDialog(ssr) {
+      this.updateOrAddSSRForm.uid = ssr ? ssr.uid : ''
+      this.updateOrAddSSRForm.name = ssr ? ssr.name : ''
+      this.updateOrAddSSRForm.frontpath = ssr ? ssr.frontpath : ''
+      this.updateOrAddSSRForm.uepath = ssr ? ssr.uepath : ''
+      this.updateOrAddSSRForm.xresolution = ssr ? ssr.xresolution : 1920
+      this.updateOrAddSSRForm.yresolution = ssr ? ssr.yresolution : 1080
+      this.updateOrAddSSRForm.background = ssr ? ssr.background : false
 
-      if (ssr.status) {
+      if (ssr && ssr.status) {
         Message({
           message: '先停止推流',
           type: 'error',
           duration: 5 * 1000
         })
       } else {
-        this.updatgeDialogVisible = true
+        this.dialogVisible = true
       }
     },
-    handleSSRUpdate(index, ssr) {  
-      const new_ssr = {
-          uid: ssr.uid,
-          name: this.updateSSRForm.name,
-          background: this.updateSSRForm.background,
-          uepath: this.updateSSRForm.uepath,
-          frontpath: this.updateSSRForm.frontpath,
-          xresolution: this.updateSSRForm.xresolution,
-          yresolution: this.updateSSRForm.yresolution
-        }
-      update(new_ssr).then(response => {
-        if (response.status === 200) {
-            this.list[index] = response.data
-            this.updatgeDialogVisible = false
-        } else {
-          Message({
-            message: '修改失败',
-            type: 'error',
-            duration: 5 * 1000
-          })
-        }
-      })
+    handleSSRUpdateOrAdd() {
+      const ssr = {
+        name: this.updateOrAddSSRForm.name,
+        background: this.updateOrAddSSRForm.background,
+        uepath: this.updateOrAddSSRForm.uepath,
+        frontpath: this.updateOrAddSSRForm.frontpath,
+        xresolution: this.updateOrAddSSRForm.xresolution,
+        yresolution: this.updateOrAddSSRForm.yresolution
+      }
+
+      if (!this.updateOrAddSSRForm.uid) {
+        // add ssr
+        this.dialogVisible = false
+        add(ssr).then(response => {
+          this.list.push(response.data)
+        })
+      } else {
+        ssr['uid'] = this.updateOrAddSSRForm.uid
+        update(ssr).then(response => {
+          if (response.status === 200) {
+            this.list.forEach(element => {
+              if (element.uid === ssr.uid) {
+                element.name = ssr.name
+                element.background = ssr.background
+                element.uepath = ssr.uepath
+                element.frontpath = ssr.frontpath
+                element.xresolution = ssr.xresolution
+                element.yresolution = ssr.yresolution
+              }
+            })
+            this.dialogVisible = false
+          } else {
+            Message({
+              message: '修改失败',
+              type: 'error',
+              duration: 5 * 1000
+            })
+          }
+        })
+      }
     },
     // signal websocket event
     handleSignalMessage(event) {

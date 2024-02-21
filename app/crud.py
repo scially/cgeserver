@@ -96,7 +96,6 @@ class SSRModelCache:
         old.uepath = model.uepath
         old.xresolution = model.xresolution
         old.yresolution = model.yresolution
-        
         model = self._ssr_crud.update(old)
         self._cache[str(model.uid)] = SSRModelInstance(model)
         return self._cache[str(model.uid)]

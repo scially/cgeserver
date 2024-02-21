@@ -74,7 +74,7 @@ class SSRModelInstance:
             if self.model.background:
                 cmds = cmds + ["-RenderOffScreen", "-ForceRes"]
             
-            cmds = cmds + [f"-ResX={self.model.xresolution}", f"-Resy={self.model.xresolution}"]
+            cmds = cmds + [f"-ResX={self.model.xresolution}", f"-ResY={self.model.xresolution}"]
             cmds = cmds + ["-NvEncH264ConfigLevel=NV_ENC_LEVEL_H264_52"]
             self.__process = Popen(cmds)
             
@@ -86,9 +86,13 @@ class SSRModelInstance:
             app.mount(f"/static/{self.model.uid}", StaticFiles(directory=self.model.frontpath), str(self.model.uid))
             
             front_result =True
-            
-        self.status = ue_result or front_result
-        return self.status
+        
+        if settings.PRODUCTION == 'production':    
+            self.status = ue_result or front_result
+            return self.status
+        else:
+            self.status = True 
+            return True
 
     def stop(self, app:FastAPI) -> bool:
         # umount self static mount

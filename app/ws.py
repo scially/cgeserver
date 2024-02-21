@@ -1,11 +1,14 @@
 from fastapi import WebSocket
+from fastapi.websockets import WebSocketState
 
 from abc import ABCMeta
 from abc import abstractmethod
-import weakref
+import logging
 import json
 
 from app.config import settings
+
+logger = logging.Logger(__name__)
 
 class WebSocketManagerBase(metaclass=ABCMeta):
     @abstractmethod
@@ -33,7 +36,7 @@ class SignalWebSocketManager(WebSocketManagerBase):
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket, **args):
-        await websocket.close()
+        # await websocket.close()
         self.active_connections.remove(websocket)
 
     async def broadcast_message(self, message: str, websocket: WebSocket = None, **args):
@@ -59,7 +62,7 @@ class StreamingWebSocketManager(WebSocketManagerBase):
         self.__server: WebSocket = None
     
     async def __client_connect(self, websocket: WebSocket):
-        if self.__server:
+        if not self.__server or self.__server.application_state != WebSocketState.CONNECTED:
             return
         
         await websocket.accept()
@@ -67,10 +70,10 @@ class StreamingWebSocketManager(WebSocketManagerBase):
         self.__client_id += 1
         
         msg = {
-            'type': 'palyerCount',
-            'count': f'{len(self.__clients)}'
+            'type': 'playerCount',
+            'count': len(self.__clients)
         }
-        await self.broadcast_message(json.dumps(msg), type_='client')
+        await self.broadcast_message(json.dumps(msg), websocket, type_='client')
         
         config = {
             'type': 'config',
@@ -86,17 +89,32 @@ class StreamingWebSocketManager(WebSocketManagerBase):
             await self.__server_connect(websocket)
 
     async def disconnect(self, websocket: WebSocket, **args):
-        pass
+        type_ = args.get('type_', '')
+        if type_ == 'client':
+            await self.__client_disconnect(websocket)
+        elif type_ =='server':
+            await self.__server_disconnect(websocket)
     
-    async def broadcast_message(self, message: str, websocket: WebSocket = None, **args):
+    async def __client_disconnect(self, websocket: WebSocket):
+        for k, v in self.__clients.items():
+            if v == websocket:
+                # await v.close()
+                del self.__clients[k]
+                break
+        
+    async def __server_disconnect(self, websocket: WebSocket):
+        # await websocket.close()
+        self.__server = None
+        
+    async def broadcast_message(self, message: str, websocket: WebSocket, **args):
         type_ = args.get('type_', '')
         if type_ == 'client':
             for v in self.__clients.values():
                 if v != websocket:
-                    v.send_text(message)
+                    await v.send_text(message)
         elif type_ =='server':
             if self.__server:
-                self.__server.send_text(message)
+                await self.__server.send_text(message)
                 
     async def receive_message(self, websocket: WebSocket, **args):  
         type_ = args.get('type_', '')
@@ -115,11 +133,13 @@ class StreamingWebSocketManager(WebSocketManagerBase):
         for k, v in self.__clients.items():
             if websocket == v:
                 player_id = k
+                break
                 
-        data['player_id'] = player_id
+        data['playerId'] = player_id
         
         if data['type'] == 'offer':
-            await self.__server.send_text(json.dumps(data))
+            msg = json.dumps(data)
+            await self.__server.send_text(msg)
             
         elif data['type'] == 'iceCandidate':
             if settings.SSR_ICE_ENABLE:
@@ -128,10 +148,11 @@ class StreamingWebSocketManager(WebSocketManagerBase):
                 candidate_msgs[4] = settings.SSR_HOST
                 data['candidate']['candidate'] = ' '.join(candidate_msgs)
 
-            await self.__server.send_text(json.dumps(data))
+            await websocket.send_text(json.dumps(data))
             
         elif data['type'] == 'stats':
-            pass
+            logger.info(f'[Player] <- {player_id} stats: {data}')
+            
         elif data['type'] == 'kick':
             for k, v in self.__clients.items():
                 if k != player_id:
@@ -159,12 +180,14 @@ class StreamingWebSocketManager(WebSocketManagerBase):
             return
         
         try:
-            player_id = int(data.get('player_id'))
+            player_id = int(data.get('playerId'))
         except (ValueError, TypeError):
+            logger.error(f'[Server] Invalid playerId: {data.get("playerId")}')
             return
         
         player = self.__clients[player_id]
         if player is None:
+            logger.error(f'[Server] Player not found: {player_id}')
             return
        
         if data['type'] == 'answer':

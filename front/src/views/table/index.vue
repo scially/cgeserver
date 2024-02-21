@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-button @click="handleSSRUpdateDialog(null)">添加</el-button>
-    <el-dialog title="修改SSR" :visible.sync="dialogVisible" width="40%">
+    <el-dialog title="推流实例" :visible.sync="dialogVisible" width="40%">
       <el-form ref="form" :model="updateOrAddSSRForm" label-width="80px">
         <input v-model="updateOrAddSSRForm.uid" hidden type="text">
         <el-form-item label="推流名称">
@@ -84,6 +84,7 @@
 
 <script>
 import { list, remove, add, query, update, start, stop } from '@/api/table'
+import { info } from '@/api/dev'
 import { Message } from 'element-ui'
 
 let signalWebSocket = null
@@ -101,7 +102,6 @@ export default {
   },
   data() {
     return {
-      baseUrl: process.env.VUE_APP_BASE_API,
       list: [],
       // ssr list loading
       listLoading: true,
@@ -120,7 +120,13 @@ export default {
       currentTime: Date.now()
     }
   },
-  created() {
+  asyncComputed: {
+    async baseUrl() {
+      const response = await info()
+      return `${response.data.protocol}://${response.data.host}:${response.data.port}`
+    }
+  },
+  mounted() {
     this.fetchData()
   },
   methods: {

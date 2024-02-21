@@ -17,6 +17,10 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
+// async computed
+import AsyncComputed from 'vue-async-computed'
+
+Vue.use(AsyncComputed)
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

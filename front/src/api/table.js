@@ -23,7 +23,7 @@ export function add(data) {
   })
 }
 
-export function query(params){
+export function query(params) {
   return request({
     url: '/api/ssr/status',
     method: 'get',
@@ -31,7 +31,7 @@ export function query(params){
   })
 }
 
-export function update(data){
+export function update(data) {
   return request({
     url: '/api/ssr/update',
     method: 'post',
@@ -39,7 +39,7 @@ export function update(data){
   })
 }
 
-export function start(data){
+export function start(data) {
   return request({
     url: '/api/ssr/start',
     method: 'post',
@@ -47,7 +47,7 @@ export function start(data){
   })
 }
 
-export function stop(data){
+export function stop(data) {
   return request({
     url: '/api/ssr/stop',
     method: 'post',

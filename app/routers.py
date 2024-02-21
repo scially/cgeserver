@@ -9,15 +9,28 @@ from fastapi import Body
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
 from fastapi import Request
-from app.crud import Caches
 
+from app.crud import Caches
 from app.response import ResponseModel
 from app.models import SSRModel
+from app.config import settings
 
 api_router = APIRouter(prefix="/api")
 ws_router  = APIRouter(prefix="/ws")
 
 router = (api_router, ws_router)
+
+@api_router.get("/dev/info", response_model=ResponseModel[dict[str, str|int]])
+async def info() -> ResponseModel[SSRModel]:
+    r: ResponseModel[dict[str, str]] = ResponseModel()
+    r.data = {
+        'host': settings.SSR_HOST,
+        'port': settings.PROJECT_PORT,
+        'protocol': 'http',
+    }
+    r.status = 200
+    r.msg = "get dev info success"
+    return r
 
 @api_router.post("/ssr/add", response_model=ResponseModel[SSRModel])
 async def add(ssr_model: SSRModel) -> ResponseModel[SSRModel]:

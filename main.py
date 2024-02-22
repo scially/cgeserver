@@ -3,6 +3,13 @@ from fastapi import FastAPI
 from app.config import settings
 from app.routers import router
 
+import logging
+
+HANDLER = logging.FileHandler('cgeserver.log')
+HANDLER.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+
+logging.basicConfig(level=logging.INFO, handlers=[HANDLER])
+
 app = FastAPI(title="CGEServer")
 
 if settings.PRODUCTION == 'production':

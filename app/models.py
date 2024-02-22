@@ -73,8 +73,8 @@ class SSRModelInstance:
             
             if self.model.background:
                 cmds = cmds + ["-RenderOffScreen", "-ForceRes"]
+                cmds = cmds + [f"-ResX={self.model.xresolution}", f"-ResY={self.model.yresolution}"]
             
-            cmds = cmds + [f"-ResX={self.model.xresolution}", f"-ResY={self.model.xresolution}"]
             cmds = cmds + ["-NvEncH264ConfigLevel=NV_ENC_LEVEL_H264_52"]
             self.__process = Popen(cmds)
             

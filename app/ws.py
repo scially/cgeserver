@@ -164,6 +164,12 @@ class StreamingWebSocketManager(WebSocketManagerBase):
         await websocket.accept()
         self.__server = websocket
         
+        config = {
+            'type': 'config',
+            'peerConnectionOptions': {}
+        }
+        await websocket.send_text(json.dumps(config))
+        
     async def __server_receive_message(self, websocket: WebSocket):
         data = await websocket.receive_text()
         try:

@@ -14,7 +14,9 @@ if settings.PRODUCTION == 'production':
         front_dir = f"{sys._MEIPASS}/app"
     else:
         front_dir = 'front/dist'
+    
     app.mount("/app", StaticFiles(directory=front_dir), name="cgeserver_front")
+    
 else: 
     from fastapi.middleware.cors import CORSMiddleware
     app.add_middleware(

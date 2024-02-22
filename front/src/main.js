@@ -20,6 +20,8 @@ import '@/permission' // permission control
 // async computed
 import AsyncComputed from 'vue-async-computed'
 
+Vue.config.ignoredElements = ['peer-stream']
+
 Vue.use(AsyncComputed)
 
 // set ElementUI lang to EN

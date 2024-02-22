@@ -47,6 +47,7 @@ module.exports = {
       }
     }
   },
+
   chainWebpack(config) {
     // it can improve the speed of the first screen, it is recommended to turn on preload
     config.plugin('preload').tap(() => [
@@ -61,6 +62,16 @@ module.exports = {
 
     // when there are many pages, it will cause too many meaningless requests
     config.plugins.delete('prefetch')
+    // set coustome tab
+    config.module
+      .rule('vue')
+      .use('vue-loader')
+      .tap(options => {
+        // options.compilerOptions.isCustomElement = (tag) => { 
+        //   return tag.startsWith('peer-')
+        // } 
+        // return options
+      })
 
     // set svg-sprite-loader
     config.module

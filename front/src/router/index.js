@@ -36,19 +36,30 @@ export const constantRoutes = [
     component: () => import('@/views/404'),
     hidden: true
   },
-
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/streamingserver',
     children: [{
-      path: 'dashboard',
-      name: 'dashboard',
-      component: () => import('@/views/table/index'),
+      path: 'streamingserver',
+      name: 'streamingserver',
+      component: () => import('@/views/streamingserver/index'),
       meta: { title: '推流实例', icon: 'dashboard' }
     }]
   },
-
+  {
+    path: '/openstreaming',
+    meta: { title: '推流渲染', icon: 'dashboard' },
+    component: Layout,
+    children:[
+      {
+        path: '',
+        name: 'openstreaming',
+        component: () => import('@/views/openstreaming/index'),
+        meta: { title: '推流渲染', icon: 'dashboard' }
+      }
+    ]
+  },
   // {
   //   path: '/example',
   //   component: Layout,

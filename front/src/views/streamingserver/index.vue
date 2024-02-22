@@ -59,7 +59,7 @@
           <el-switch :value="scope.row.status" active-color="#13ce66" inactive-color="#ff4949" />
         </template>
       </el-table-column>
-      <el-table-column label="推流详情" align="center" width="500">
+      <el-table-column label="推流操作" align="center" width="700">
         <template slot-scope="scope">
           <el-popover placement="right" title="详情" width="600" trigger="click">
             <p>推流地址: {{ baseUrl.replace('http', 'ws') }}/ws/streaming/server/{{ scope.row.uid }}</p>
@@ -73,6 +73,7 @@
           <el-button size="mini" :disabled="scope.row.status" @click="handleSSRStart(scope.$index)">开始推流</el-button>
           <el-button size="mini" :disabled="!scope.row.status" @click="handleSSRStop(scope.$index)">停止推流</el-button>
           <el-button size="mini" @click="handleSSRNavigate(scope.row)">跳转</el-button>
+          <el-button size="mini" @click="handleSSROpen(scope.row)">打开推流</el-button>
           <el-button size="mini" @click="handleSSRUpdateDialog(scope.row)">编辑</el-button>
 
           <el-button size="mini" type="danger" @click="handleSSRDelete(scope.$index, scope.row)">删除</el-button>
@@ -189,7 +190,17 @@ export default {
     handleSSRNavigate(ssr) {
       window.open(`${this.baseUrl}/static/${ssr.uid}/index.html?data=${Date.now()}`)
     },
-
+    handleSSROpen(ssr) {
+      if (true || ssr.status) {
+        this.$router.push({ path: '/openstreaming/', query: { uid: ssr.uid }})
+      } else {
+        Message({
+          message: '先启动推流',
+          type: 'error',
+          duration: 5 * 1000
+        })
+      }
+    },
     handleSSRUpdateDialog(ssr) {
       this.updateOrAddSSRForm.uid = ssr ? ssr.uid : ''
       this.updateOrAddSSRForm.name = ssr ? ssr.name : ''

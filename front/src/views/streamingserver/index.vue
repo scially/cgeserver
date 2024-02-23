@@ -191,7 +191,7 @@ export default {
       window.open(`${this.baseUrl}/static/${ssr.uid}/index.html?data=${Date.now()}`)
     },
     handleSSROpen(ssr) {
-      if (true || ssr.status) {
+      if (ssr.status) {
         const routeData = this.$router.resolve({ path: '/openstreaming/', query: { uid: ssr.uid }});
         window.open(routeData.href, '_blank');
       } else {

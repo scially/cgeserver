@@ -62,16 +62,6 @@ module.exports = {
 
     // when there are many pages, it will cause too many meaningless requests
     config.plugins.delete('prefetch')
-    // set coustome tab
-    config.module
-      .rule('vue')
-      .use('vue-loader')
-      .tap(options => {
-        // options.compilerOptions.isCustomElement = (tag) => { 
-        //   return tag.startsWith('peer-')
-        // } 
-        // return options
-      })
 
     // set svg-sprite-loader
     config.module

@@ -9,11 +9,6 @@ var is_reconnection = false;
 var ws;
 const WS_OPEN_STATE = 1;
 
-window.ueLinkVideo = {
-  isOpen: false,//是否连接上
-  isVideo: false//是否视频推流已连接
-}
-
 var qualityControlOwnershipCheckBox;
 var matchViewportResolution;
 // TODO: Remove this - workaround because of bug causing UE to crash when switching resolutions too quickly
@@ -266,7 +261,6 @@ function showPlayOverlay() {
   autoConnect = setInterval(() => {
     if (webRtcPlayerObj) {
       clearInterval(autoConnect)
-      window.ueLinkVideo.isOpen = true
       autoConnect = null
       webRtcPlayerObj.video.play();
       requestQualityControl();
@@ -1604,7 +1598,6 @@ function connect(wsUrl) {
     } else if (msg.type === 'answer') {
       onWebRtcAnswer(msg);
     } else if (msg.type === 'iceCandidate') {
-      window.ueLinkVideo.isVideo = true
       onWebRtcIce(msg.candidate);
     } else {
       // console.log(`invalid SS message type: ${msg.type}`);

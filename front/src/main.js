@@ -16,12 +16,9 @@ import router from './router'
 
 import '@/icons' // icon
 import '@/permission' // permission control
-import './views/openstreaming/player.css'
 
 // async computed
 import AsyncComputed from 'vue-async-computed'
-
-Vue.config.ignoredElements = ['peer-stream']
 
 Vue.use(AsyncComputed)
 

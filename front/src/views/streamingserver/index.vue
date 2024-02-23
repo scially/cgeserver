@@ -192,7 +192,8 @@ export default {
     },
     handleSSROpen(ssr) {
       if (true || ssr.status) {
-        this.$router.push({ path: '/openstreaming/', query: { uid: ssr.uid }})
+        const routeData = this.$router.resolve({ path: '/openstreaming/', query: { uid: ssr.uid }});
+        window.open(routeData.href, '_blank');
       } else {
         Message({
           message: '先启动推流',

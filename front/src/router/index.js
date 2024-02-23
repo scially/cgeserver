@@ -49,16 +49,9 @@ export const constantRoutes = [
   },
   {
     path: '/openstreaming',
-    meta: { title: '推流渲染', icon: 'dashboard' },
-    component: Layout,
-    children:[
-      {
-        path: '',
-        name: 'openstreaming',
-        component: () => import('@/views/openstreaming/index'),
-        meta: { title: '推流渲染', icon: 'dashboard' }
-      }
-    ]
+    name: 'openstreaming',
+    component: () => import('@/views/openstreaming/index'),
+    meta: { title: '推流渲染', icon: 'dashboard' }
   },
   // {
   //   path: '/example',

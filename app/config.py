@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "cgeserver.db"
     DATABASE_URL: str  = f"sqlite:///{DATABASE_NAME}"
 
-    PRODUCTION: str = 'development'
+    PRODUCTION: str = 'production'
 
     SECRET_KEY: str = "09d25e094aaa6ca2556d818166b7a9563b93f7199f6f0f4caa6cf63b88e8d3f2"
     SECRET_ALGORITHM: str = "HS256"
